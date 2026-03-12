@@ -435,12 +435,14 @@ function renderCandidates() {
 }
 
 // ── TOP MOVERS ────────────────────────────────────────────────
+var FMP_KEY = "TW9XCUkDJ4qQOgrfOnW1Iebkd8eyiz7G";
 var MKTS = {
-  dax:    "SAP.DE,SIE.DE,ALV.DE,MUV2.DE,DTE.DE,BAS.DE,BAYN.DE,VOW3.DE,BMW.DE,ADS.DE,DBK.DE,RWE.DE,MBG.DE,CON.DE,IFX.DE,ENR.DE,HEI.DE,ZAL.DE",
-  mdax:   "AIXA.DE,EVT.DE,LPKF.DE,SFQ.DE,SMHN.DE,AFX.DE,KGX.DE,EMH.DE,WUW.DE,GXI.DE",
-  us:     "NVDA,MSFT,AAPL,AMZN,META,GOOGL,TSLA,AMD,MRNA,COIN,MARA,RIOT,MSTR,CLSK,BNTX",
-  crypto: "COIN,MARA,RIOT,MSTR,CLSK,HUT,BTBT,WULF"
+  dax:    ["SAP","SIE","ALV","MUV2","DTE","BAS","BAYN","VOW3","BMW","ADS","DBK","RWE","MBG","CON","IFX","ENR","HEI","ZAL"],
+  mdax:   ["AIXA","EVT","LPKF","SFQ","SMHN","AFX","KGX","EMH","WUW","GXI"],
+  us:     ["NVDA","MSFT","AAPL","AMZN","META","GOOGL","TSLA","AMD","MRNA","COIN","MARA","RIOT","MSTR","CLSK","BNTX"],
+  crypto: ["COIN","MARA","RIOT","MSTR","CLSK","HUT","BTBT","WULF"]
 };
+var EUR_MKTS = ["dax","mdax"];
 var USD_LIST = ["NVDA","MSFT","AAPL","AMZN","META","GOOGL","TSLA","AMD","MRNA","COIN","MARA","RIOT","MSTR","CLSK","BNTX","HUT","BTBT","WULF"];
 
 function setMkt(btn, m) {
@@ -469,73 +471,54 @@ function loadLive() {
   document.getElementById("liveOut").innerHTML = "";
 
   var syms = MKTS[curMkt];
-  var yahooUrl = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=" + syms + "&fields=symbol,shortName,regularMarketPrice,regularMarketChangePercent,regularMarketChange,regularMarketVolume,averageVolume,fiftyTwoWeekLow,fiftyTwoWeekHigh,currency";
+  var isEur = EUR_MKTS.indexOf(curMkt) >= 0;
+  var exchange = isEur ? "XETRA" : "";
+  var symStr = syms.map(function(s){ return exchange ? s+"."+exchange : s; }).join(",");
+  var url = "https://financialmodelingprep.com/api/v3/quote/" + symStr + "?apikey=" + FMP_KEY;
 
-  var proxies = [
-    "https://api.allorigins.win/get?url=" + encodeURIComponent(yahooUrl),
-    "https://thingproxy.freeboard.io/fetch/" + yahooUrl,
-    "https://corsproxy.io/?" + encodeURIComponent(yahooUrl),
-    "https://proxy.cors.sh/" + yahooUrl
-  ];
-
-  function showErr() {
-    document.getElementById("liveLoad").className = "hidden";
-    var err = document.getElementById("liveErr");
-    err.innerHTML = "Live-Kurse konnten nicht geladen werden.<br><br>Alle Proxies blockiert. Bitte nutze den <strong>manuellen Bereich</strong> unten oder offne die Links unter 'Kurse nachschlagen' und trage die Werte ein.";
-    err.className = "";
-    btn.disabled = false;
-    btn.textContent = "Erneut versuchen";
-  }
-
-  function processQuotes(quotes) {
-    var usdEur = 0.92;
-    liveData = [];
-    for (var i = 0; i < quotes.length; i++) {
-      var q = quotes[i];
-      var isUSD = USD_LIST.indexOf(q.symbol) >= 0;
-      var price = isUSD ? q.regularMarketPrice * usdEur : q.regularMarketPrice;
-      var lo = isUSD ? (q.fiftyTwoWeekLow  || 0) * usdEur : (q.fiftyTwoWeekLow  || 0);
-      var hi = isUSD ? (q.fiftyTwoWeekHigh || 0) * usdEur : (q.fiftyTwoWeekHigh || 0);
-      liveData.push({
-        ticker: q.symbol.replace(".DE",""),
-        name:   q.shortName || q.symbol,
-        price:  price,
-        chg:    q.regularMarketChangePercent || 0,
-        chgAbs: isUSD ? (q.regularMarketChange||0)*usdEur : (q.regularMarketChange||0),
-        lo52: lo, hi52: hi,
-        dLow:  lo > 0 ? (((price-lo)/lo)*100).toFixed(1) : null,
-        dHigh: hi > 0 ? (((price-hi)/hi)*100).toFixed(1) : null,
-        vr: q.averageVolume > 0 ? (q.regularMarketVolume/q.averageVolume).toFixed(1) : null,
-        isUSD: isUSD
-      });
-    }
-    renderLive();
-    document.getElementById("liveLoad").className = "hidden";
-    btn.disabled = false;
-    btn.textContent = "Aktualisieren";
-  }
-
-  function tryProxy(idx) {
-    if (idx >= proxies.length) { showErr(); return; }
-    fetch(proxies[idx])
-      .then(function(r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.text();
-      })
-      .then(function(text) {
-        var data;
-        try { data = JSON.parse(text); } catch(e) { throw new Error("JSON parse fehler"); }
-        if (data.contents) {
-          try { data = JSON.parse(data.contents); } catch(e) { throw new Error("Contents parse fehler"); }
-        }
-        var quotes = (data && data.quoteResponse && data.quoteResponse.result) || [];
-        if (quotes.length === 0) throw new Error("Keine Quotes");
-        processQuotes(quotes);
-      })
-      .catch(function() { tryProxy(idx + 1); });
-  }
-
-  tryProxy(0);
+  fetch(url)
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function(quotes) {
+      if (!quotes || quotes.length === 0) throw new Error("Keine Daten");
+      if (quotes.Error) throw new Error(quotes.Error);
+      var usdEur = 0.92;
+      liveData = [];
+      for (var i = 0; i < quotes.length; i++) {
+        var q = quotes[i];
+        var rawSym = q.symbol.replace(".XETRA","").replace(".NYSE","").replace(".NASDAQ","");
+        var isUSD = !isEur;
+        var price = isUSD ? (q.price || 0) * usdEur : (q.price || 0);
+        var lo = isUSD ? (q.yearLow  || 0) * usdEur : (q.yearLow  || 0);
+        var hi = isUSD ? (q.yearHigh || 0) * usdEur : (q.yearHigh || 0);
+        liveData.push({
+          ticker: rawSym,
+          name:   q.name || rawSym,
+          price:  price,
+          chg:    q.changesPercentage || 0,
+          chgAbs: isUSD ? (q.change||0)*usdEur : (q.change||0),
+          lo52: lo, hi52: hi,
+          dLow:  lo > 0 ? (((price-lo)/lo)*100).toFixed(1) : null,
+          dHigh: hi > 0 ? (((price-hi)/hi)*100).toFixed(1) : null,
+          vr: q.avgVolume > 0 ? ((q.volume||0)/q.avgVolume).toFixed(1) : null,
+          isUSD: isUSD
+        });
+      }
+      renderLive();
+      document.getElementById("liveLoad").className = "hidden";
+      btn.disabled = false;
+      btn.textContent = "Aktualisieren";
+    })
+    .catch(function(e) {
+      document.getElementById("liveLoad").className = "hidden";
+      var err = document.getElementById("liveErr");
+      err.innerHTML = "Fehler: " + e.message + "<br><small>API-Key prüfen oder manuellen Bereich nutzen.</small>";
+      err.className = "";
+      btn.disabled = false;
+      btn.textContent = "Erneut versuchen";
+    });
 }
 
 function renderLive() {
@@ -803,22 +786,23 @@ function refreshPrices() {
   var btn = document.getElementById("rfBtn");
   btn.textContent = "Ladt...";
   btn.disabled = true;
-  var syms = portfolio.map(function(p) { return p.exchange && p.exchange.indexOf("Xetra") >= 0 ? p.ticker+".DE" : p.ticker; }).join(",");
-  var url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=" + syms + "&fields=symbol,regularMarketPrice,currency";
-  var proxies2 = [
-    "https://api.allorigins.win/get?url=" + encodeURIComponent(url),
-    "https://corsproxy.io/?" + encodeURIComponent(url)
-  ];
-  fetch(proxies2[0])
+  var symList = portfolio.map(function(p) {
+    if (p.exchange && (p.exchange.indexOf("Xetra") >= 0 || p.exchange.indexOf("LS Exchange") >= 0 || p.exchange.indexOf("Euronext") >= 0)) {
+      return p.ticker + ".XETRA";
+    }
+    return p.ticker;
+  });
+  var url = "https://financialmodelingprep.com/api/v3/quote/" + symList.join(",") + "?apikey=" + FMP_KEY;
+  fetch(url)
     .then(function(r) { return r.json(); })
-    .then(function(raw) {
-      var data = raw.contents ? JSON.parse(raw.contents) : raw;
-      var quotes = (data && data.quoteResponse && data.quoteResponse.result) || [];
+    .then(function(quotes) {
       for (var i = 0; i < quotes.length; i++) {
-        var q = quotes[i], sym = q.symbol.replace(".DE","");
+        var q = quotes[i];
+        var sym = q.symbol.replace(".XETRA","").replace(".NYSE","").replace(".NASDAQ","");
         for (var j = 0; j < portfolio.length; j++) {
           if (portfolio[j].ticker === sym) {
-            portfolio[j].current = q.currency === "USD" ? q.regularMarketPrice * 0.92 : q.regularMarketPrice;
+            var isUSD = USD_LIST.indexOf(sym) >= 0;
+            portfolio[j].current = isUSD ? q.price * 0.92 : q.price;
           }
         }
       }
@@ -826,10 +810,9 @@ function refreshPrices() {
       btn.textContent = "Kurse aktualisieren"; btn.disabled = false;
     })
     .catch(function(e) {
-      alert("Fehler: " + e.message);
+      alert("Fehler beim Aktualisieren: " + e.message);
       btn.textContent = "Kurse aktualisieren"; btn.disabled = false;
     });
 }
-</script>
-</body>
-</html>
+
+
