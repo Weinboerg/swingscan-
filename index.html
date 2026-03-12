@@ -506,19 +506,50 @@ function refreshPx(){
       btn.textContent="Kurse aktualisieren"; btn.disabled=false;
     });
 }
+function addMov(){
+  var t = document.getElementById("mv_t").value.trim().toUpperCase();
+  var n = document.getElementById("mv_n").value.trim() || t;
+  var p = parseFloat(document.getElementById("mv_p").value);
+  var ch= parseFloat(document.getElementById("mv_c").value);
+  var lo= parseFloat(document.getElementById("mv_lo").value);
+  var hi= parseFloat(document.getElementById("mv_hi").value);
+  if(!t || isNaN(p)){ alert("Ticker und Kurs benoetigt."); return; }
+  var dLo = (!isNaN(lo)&&lo>0) ? (((p-lo)/lo)*100).toFixed(1) : null;
+  var dHi = (!isNaN(hi)&&hi>0) ? (((p-hi)/hi)*100).toFixed(1) : null;
+  var ssl = (!isNaN(lo)&&lo>0) ? (lo*0.98).toFixed(2) : null;
+  movers.unshift({t:t,n:n,p:p,c:isNaN(ch)?null:ch,lo:isNaN(lo)?null:lo,hi:isNaN(hi)?null:hi,dLo:dLo,dHi:dHi,ssl:ssl});
+  saveM();
+  document.getElementById("mv_result").className = "hidden";
+  renderMov();
+}
+
+function clearMov(){
+  if(!confirm("Alle Eintrage loeschen?")) return;
+  movers = []; saveM(); renderMov();
+}
+
+function delMov(i){
+  movers.splice(i,1); saveM(); renderMov();
+}
+
 function searchTicker(){
   var raw = document.getElementById("mv_search").value.trim().toUpperCase();
   if(!raw){ alert("Bitte Ticker eingeben."); return; }
   var btn = document.getElementById("mv_searchBtn");
-  btn.textContent = "Suche...";
+  btn.innerHTML = "&#9696; Suche...";
   btn.disabled = true;
+  btn.style.opacity = "0.7";
   document.getElementById("mv_result").className = "hidden";
   document.getElementById("mv_err").className = "hidden";
 
   var usdEur = 0.92;
-  var yUrl = "https://query1.finance.yahoo.com/v8/finance/chart/" + raw + "?interval=1d&range=1y";
-  var p1 = "https://api.allorigins.win/get?url=" + encodeURIComponent(yUrl);
-  var p2 = "https://corsproxy.io/?" + encodeURIComponent(yUrl);
+  // Try both query1 and query2 Yahoo endpoints, plus both proxies = 4 attempts
+  var yUrl1 = "https://query1.finance.yahoo.com/v8/finance/chart/" + raw + "?interval=1d&range=1y";
+  var yUrl2 = "https://query2.finance.yahoo.com/v8/finance/chart/" + raw + "?interval=1d&range=1y";
+  var p1 = "https://api.allorigins.win/get?url=" + encodeURIComponent(yUrl1);
+  var p2 = "https://corsproxy.io/?" + encodeURIComponent(yUrl1);
+  var p3 = "https://api.allorigins.win/get?url=" + encodeURIComponent(yUrl2);
+  var p4 = "https://corsproxy.io/?" + encodeURIComponent(yUrl2);
 
   function done(meta){
     var isUSD = meta.currency === "USD";
@@ -537,16 +568,18 @@ function searchTicker(){
     document.getElementById("mv_hi").value = hi > 0 ? hi.toFixed(2) : "";
     document.getElementById("mv_result").className = "";
     document.getElementById("mv_search").value = "";
-    btn.textContent = "Suchen";
+    btn.innerHTML = "Suchen";
     btn.disabled = false;
+    btn.style.opacity = "1";
   }
 
   function fail(){
     var err = document.getElementById("mv_err");
     err.innerHTML = "Nicht gefunden. Tipps:<br>Deutsche Aktien: <b>DBK.DE</b>, <b>BAYN.DE</b>, <b>SAP.DE</b><br>US-Aktien: <b>NVDA</b>, <b>AAPL</b>, <b>COIN</b>";
     err.className = "";
-    btn.textContent = "Suchen";
+    btn.innerHTML = "Suchen";
     btn.disabled = false;
+    btn.style.opacity = "1";
   }
 
   function parse(txt){
@@ -558,24 +591,18 @@ function searchTicker(){
     return meta;
   }
 
-  fetch(p1)
-    .then(function(r){ return r.text(); })
-    .then(function(txt){
-      var meta = parse(txt);
-      if(meta){ done(meta); return; }
-      return fetch(p2)
-        .then(function(r){ return r.text(); })
-        .then(function(txt2){
-          var meta2 = parse(txt2);
-          if(meta2){ done(meta2); } else { fail(); }
-        });
-    })
-    .catch(function(){
-      fetch(p2)
-        .then(function(r){ return r.text(); })
-        .then(function(txt){ var m=parse(txt); if(m){done(m);}else{fail();} })
-        .catch(function(){ fail(); });
-    });
+  var proxies = [p1, p2, p3, p4];
+  function tryNext(i){
+    if(i >= proxies.length){ fail(); return; }
+    fetch(proxies[i])
+      .then(function(r){ return r.text(); })
+      .then(function(txt){
+        var meta = parse(txt);
+        if(meta){ done(meta); } else { tryNext(i+1); }
+      })
+      .catch(function(){ tryNext(i+1); });
+  }
+  tryNext(0);
 }
 </script>
 </body>
