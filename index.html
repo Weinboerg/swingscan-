@@ -263,8 +263,8 @@ try { var sp = localStorage.getItem("ss2_p"); if(sp) portfolio = JSON.parse(sp);
 try { var sm = localStorage.getItem("ss2_m"); if(sm) movers = JSON.parse(sm); } catch(e){}
 if (!portfolio.length) portfolio = [{ticker:"VALNEVA",name:"Valneva SE",entry:4.00,shares:1,current:4.86,stop:4.30,target:7.50,exchange:"Euronext",notes:"VALOR Phase-3"}];
 
-function sp() { try{localStorage.setItem("ss2_p",JSON.stringify(portfolio));}catch(e){} }
-function sm2() { try{localStorage.setItem("ss2_m",JSON.stringify(movers));}catch(e){} }
+function saveP() { try{localStorage.setItem("ss2_p",JSON.stringify(portfolio));}catch(e){} }
+function saveM() { try{localStorage.setItem("ss2_m",JSON.stringify(movers));}catch(e){} }
 
 // ── TABS ──────────────────────────────────────────────────────
 function tab(n) {
@@ -376,7 +376,7 @@ function loadLive() {
 
   var syms = MKTS[curMkt];
   var isEU = curMkt==="dax"||curMkt==="mdax";
-  var symStr = isEU ? syms.map(function(s){return s+".XETRA";}).join(",") : syms.join(",");
+  var symStr = syms.join(",");
   var url = "https://financialmodelingprep.com/api/v3/quote/"+symStr+"?apikey="+FMP;
 
   fetch(url)
@@ -387,7 +387,7 @@ function loadLive() {
       var usdEur=0.92;
       for(var i=0;i<data.length;i++){
         var q=data[i];
-        var sym=q.symbol.replace(".XETRA","");
+        var sym=q.symbol.replace(".XETRA","").replace(".HM","").replace(".F","");
         var usd=!isEU;
         var px=usd?q.price*usdEur:q.price;
         var lo=usd?(q.yearLow||0)*usdEur:(q.yearLow||0);
@@ -490,12 +490,12 @@ function addMov(){
   var dHi=(!isNaN(hi)&&hi>0)?(((p-hi)/hi)*100).toFixed(1):null;
   var ssl=(!isNaN(lo)&&lo>0)?(lo*0.98).toFixed(2):null;
   movers.unshift({t:t,n:n,p:p,c:isNaN(c)?null:c,lo:isNaN(lo)?null:lo,hi:isNaN(hi)?null:hi,dLo:dLo,dHi:dHi,ssl:ssl});
-  sm2();
+  saveM();
   ["mv_t","mv_n","mv_p","mv_c","mv_lo","mv_hi"].forEach(function(id){document.getElementById(id).value="";});
   renderMov();
 }
-function clearMov(){if(!confirm("Alle loeschen?"))return;movers=[];sm2();renderMov();}
-function delMov(i){movers.splice(i,1);sm2();renderMov();}
+function clearMov(){if(!confirm("Alle loeschen?"))return;movers=[];saveM();renderMov();}
+function delMov(i){movers.splice(i,1);saveM();renderMov();}
 function renderMov(){
   var c=document.getElementById("movOut");
   if(!movers.length){c.innerHTML="";return;}
@@ -563,7 +563,7 @@ function addPos(){
   var no=document.getElementById("p_no").value.trim();
   if(!t||isNaN(e)||isNaN(s)){alert("Ticker, Einstieg und Anzahl benoetigt.");return;}
   portfolio.push({ticker:t,name:n,entry:e,shares:s,current:isNaN(c)?e:c,stop:isNaN(sl)?0:sl,target:isNaN(tg)?0:tg,exchange:ex,notes:no});
-  sp();
+  saveP();
   ["p_t","p_n","p_e","p_s","p_c","p_sl","p_tg","p_no"].forEach(function(id){document.getElementById(id).value="";});
   renderPort();
 }
@@ -579,11 +579,11 @@ function qadd(ev,t,n,e,sl,tg){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function delPos(i){if(!confirm("Entfernen?"))return;portfolio.splice(i,1);sp();renderPort();}
+function delPos(i){if(!confirm("Entfernen?"))return;portfolio.splice(i,1);saveP();renderPort();}
 
 function updCur(i,v){
   var n=parseFloat(v);
-  if(!isNaN(n)&&n>0){portfolio[i].current=n;sp();renderPortSum();}
+  if(!isNaN(n)&&n>0){portfolio[i].current=n;saveP();renderPortSum();}
 }
 
 function renderPortSum(){
@@ -631,21 +631,21 @@ function refreshPx(){
   var btn=document.getElementById("rfBtn");
   btn.textContent="Ladt..."; btn.disabled=true;
   var syms=portfolio.map(function(p){
-    return (p.exchange&&(p.exchange.indexOf("Xetra")>=0||p.exchange.indexOf("LS")>=0||p.exchange.indexOf("Euronext")>=0))?p.ticker+".XETRA":p.ticker;
+    return p.ticker;
   });
   var url="https://financialmodelingprep.com/api/v3/quote/"+syms.join(",")+"?apikey="+FMP;
   fetch(url)
     .then(function(r){return r.json();})
     .then(function(data){
       for(var i=0;i<data.length;i++){
-        var q=data[i], sym=q.symbol.replace(".XETRA","");
+        var q=data[i], sym=q.symbol.replace(".XETRA","").replace(".HM","").replace(".F","");
         for(var j=0;j<portfolio.length;j++){
           if(portfolio[j].ticker===sym){
             portfolio[j].current=q.price*((q.currency==="USD")?0.92:1);
           }
         }
       }
-      sp(); renderPort();
+      saveP(); renderPort();
       btn.textContent="Kurse aktualisieren"; btn.disabled=false;
     })
     .catch(function(e){
