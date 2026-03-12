@@ -506,6 +506,77 @@ function refreshPx(){
       btn.textContent="Kurse aktualisieren"; btn.disabled=false;
     });
 }
+function searchTicker(){
+  var raw = document.getElementById("mv_search").value.trim().toUpperCase();
+  if(!raw){ alert("Bitte Ticker eingeben."); return; }
+  var btn = document.getElementById("mv_searchBtn");
+  btn.textContent = "Suche...";
+  btn.disabled = true;
+  document.getElementById("mv_result").className = "hidden";
+  document.getElementById("mv_err").className = "hidden";
+
+  var usdEur = 0.92;
+  var yUrl = "https://query1.finance.yahoo.com/v8/finance/chart/" + raw + "?interval=1d&range=1y";
+  var p1 = "https://api.allorigins.win/get?url=" + encodeURIComponent(yUrl);
+  var p2 = "https://corsproxy.io/?" + encodeURIComponent(yUrl);
+
+  function done(meta){
+    var isUSD = meta.currency === "USD";
+    var px = isUSD ? meta.regularMarketPrice * usdEur : meta.regularMarketPrice;
+    var lo = isUSD ? (meta.fiftyTwoWeekLow||0)*usdEur : (meta.fiftyTwoWeekLow||0);
+    var hi = isUSD ? (meta.fiftyTwoWeekHigh||0)*usdEur : (meta.fiftyTwoWeekHigh||0);
+    var prev = meta.chartPreviousClose || meta.previousClose || 0;
+    if(isUSD) prev = prev * usdEur;
+    var chg = prev > 0 ? ((px - prev) / prev * 100) : 0;
+    var sym = (meta.symbol||raw).replace(".DE","").replace(".F","").replace(".HM","");
+    document.getElementById("mv_t").value = sym;
+    document.getElementById("mv_n").value = meta.shortName || meta.longName || sym;
+    document.getElementById("mv_p").value = px.toFixed(2);
+    document.getElementById("mv_c").value = chg.toFixed(2);
+    document.getElementById("mv_lo").value = lo > 0 ? lo.toFixed(2) : "";
+    document.getElementById("mv_hi").value = hi > 0 ? hi.toFixed(2) : "";
+    document.getElementById("mv_result").className = "";
+    document.getElementById("mv_search").value = "";
+    btn.textContent = "Suchen";
+    btn.disabled = false;
+  }
+
+  function fail(){
+    var err = document.getElementById("mv_err");
+    err.innerHTML = "Nicht gefunden. Tipps:<br>Deutsche Aktien: <b>DBK.DE</b>, <b>BAYN.DE</b>, <b>SAP.DE</b><br>US-Aktien: <b>NVDA</b>, <b>AAPL</b>, <b>COIN</b>";
+    err.className = "";
+    btn.textContent = "Suchen";
+    btn.disabled = false;
+  }
+
+  function parse(txt){
+    var data;
+    try{ data = JSON.parse(txt); }catch(e){ return null; }
+    if(data && data.contents){ try{ data = JSON.parse(data.contents); }catch(e){ return null; } }
+    var meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
+    if(!meta || !meta.regularMarketPrice) return null;
+    return meta;
+  }
+
+  fetch(p1)
+    .then(function(r){ return r.text(); })
+    .then(function(txt){
+      var meta = parse(txt);
+      if(meta){ done(meta); return; }
+      return fetch(p2)
+        .then(function(r){ return r.text(); })
+        .then(function(txt2){
+          var meta2 = parse(txt2);
+          if(meta2){ done(meta2); } else { fail(); }
+        });
+    })
+    .catch(function(){
+      fetch(p2)
+        .then(function(r){ return r.text(); })
+        .then(function(txt){ var m=parse(txt); if(m){done(m);}else{fail();} })
+        .catch(function(){ fail(); });
+    });
+}
 </script>
 </body>
 </html>
