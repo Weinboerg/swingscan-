@@ -354,66 +354,131 @@ function makeCard(s,i) {
 
 
 
+function getBadge(s){
+  // Badge logic based on change%, distance from 52W low, R/R
+  var ch = s.c || 0;
+  var dLo = s.dLo ? parseFloat(s.dLo) : 999;
+  var rr = (s.entry&&s.stop&&s.target&&s.entry>s.stop) ? (s.target-s.entry)/(s.entry-s.stop) : 0;
+  if(ch < -8 && dLo < 20 && rr >= 2) return {txt:"STRONG BUY", cls:"badge bSB"};
+  if(ch < -5 && dLo < 30 && rr >= 1.5) return {txt:"BUY", cls:"badge bB"};
+  if(ch < -2) return {txt:"WATCH", cls:"badge bW"};
+  return {txt:"BEOBACHTEN", cls:"badge bW"};
+}
+
 function renderMov(){
-  var c=document.getElementById("movOut");
-  if(!movers.length){c.innerHTML="";return;}
-  c.innerHTML="";
+  var c2=document.getElementById("movOut");
+  if(!movers.length){c2.innerHTML="";return;}
+  c2.innerHTML="";
   for(var i=0;i<movers.length;i++){
-    var s=movers[i];
-    var pos=s.c===null||s.c>=0, cc=s.c!==null?(s.c>=0?"#4ade80":"#f87171"):"#a0b8d0";
-    var bg=s.c!==null?(s.c>=0?"#052e16":"#1c0a0a"):"#0a1628";
-    var br=s.c!==null?(s.c>=0?"#16a34a":"#dc2626"):"#1e3a5f";
-    var sig="";
-    if(s.c!==null&&s.c<-8) sig="Massiver Ausverkauf - Umkehrkerze abwarten!";
-    else if(s.c!==null&&s.c<-5) sig="Starker Ruckgang - abwarten";
-    else if(s.c!==null&&s.c<-2) sig="Moderater Ruckgang";
-    var el=document.createElement("div");
-    el.className="item";
-    el.innerHTML=
-      "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px'>"+
-        "<div style='display:flex;align-items:center;gap:8px'>"+
-          "<div style='background:#0a1628;border:1px solid #1e3a5f;border-radius:7px;padding:4px 9px;min-width:50px;text-align:center'>"+
-            "<div style='font-family:monospace;font-size:13px;font-weight:700;color:#60a5fa'>"+s.t+"</div>"+
+    (function(s,idx){
+      var pos=s.c===null||s.c>=0;
+      var cc=s.c!==null?(s.c>=0?"#4ade80":"#f87171"):"#a0b8d0";
+      var bg=s.c!==null?(s.c>=0?"#052e16":"#1c0a0a"):"#0a1628";
+      var br=s.c!==null?(s.c>=0?"#16a34a":"#dc2626"):"#1e3a5f";
+      var chgStr=s.c!==null?(s.c>=0?"+":"")+s.c.toFixed(2)+"%":"";
+
+      // Signal text
+      var sig="";
+      if(s.c!==null&&s.c<-8) sig="Massiver Ausverkauf - Umkehrkerze abwarten!";
+      else if(s.c!==null&&s.c<-5) sig="Starker Rueckgang - Unterstuetzung + Bestaetigung abwarten";
+      else if(s.c!==null&&s.c<-2) sig="Moderater Rueckgang - Setup prufen";
+
+      // Badge
+      var bdg = getBadge(s);
+
+      // R/R
+      var rrHtml = "";
+      if(s.entry&&s.stop&&s.target&&s.entry>s.stop){
+        var risk=s.entry-s.stop, rew=s.target-s.entry;
+        var rr=(rew/risk).toFixed(1);
+        var rrCol=parseFloat(rr)>=2?"#4ade80":parseFloat(rr)>=1.5?"#fde047":"#f87171";
+        var up=(((s.target-s.entry)/s.entry)*100).toFixed(1);
+        var dn=(((s.entry-s.stop)/s.entry)*100).toFixed(1);
+        rrHtml="<div class='dbox' style='margin-top:8px'>"+
+          "R/R: <strong style='color:"+rrCol+"'>"+rr+":1</strong> &nbsp;|&nbsp; "+
+          "Upside: <strong style='color:#4ade80'>+"+up+"%</strong> &nbsp;|&nbsp; "+
+          "Risiko: <strong style='color:#f87171'>-"+dn+"%</strong>"+
+          "</div>";
+      }
+
+      // News links
+      var ticker = s.t;
+      var gNews = "https://news.google.com/search?q="+encodeURIComponent(s.n+" Aktie")+"&hl=de";
+      var tvNews = "https://www.tradingview.com/symbols/"+ticker+"/news/";
+      var tvChart = "https://www.tradingview.com/chart/?symbol="+ticker;
+
+      var el=document.createElement("div");
+      el.className="item";
+      el.innerHTML=
+        // Header row
+        "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px'>"+
+          "<div style='display:flex;align-items:center;gap:8px;flex:1;min-width:0'>"+
+            "<div style='background:#0a1628;border:1px solid #1e3a5f;border-radius:7px;padding:4px 9px;min-width:50px;text-align:center;flex-shrink:0'>"+
+              "<div style='font-family:monospace;font-size:13px;font-weight:700;color:#60a5fa'>"+s.t+"</div>"+
+            "</div>"+
+            "<div style='font-size:12px;font-weight:600;color:#c8d8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+s.n+"</div>"+
           "</div>"+
-          "<div style='font-size:12px;font-weight:600;color:#c8d8f0'>"+s.n+"</div>"+
+          "<div style='display:flex;align-items:center;gap:7px;flex-shrink:0'>"+
+            "<div style='font-size:14px;font-weight:700;color:#c8d8f0'>"+s.p.toFixed(2)+"</div>"+
+            (chgStr?"<span style='background:"+bg+";border:1px solid "+br+";color:"+cc+";border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700'>"+chgStr+"</span>":"")+
+          "</div>"+
         "</div>"+
-        "<div style='display:flex;align-items:center;gap:7px'>"+
-          "<div style='font-size:14px;font-weight:700;color:#c8d8f0'>"+s.p.toFixed(2)+"</div>"+
-          (s.c!==null?"<span style='background:"+bg+";border:1px solid "+br+";color:"+cc+";border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700'>"+(s.c>=0?"+":"")+s.c.toFixed(2)+"%</span>":"")+
+        // Badge + signal
+        "<div style='display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap'>"+
+          "<span class='"+bdg.cls+"'>"+bdg.txt+"</span>"+
+          (sig?"<span style='font-size:11px;color:#8aaac8'>"+sig+"</span>":"")+
         "</div>"+
-      "</div>"+
-      (sig?"<div style='margin-top:7px;font-size:11px;color:#8aaac8;background:#070e1a;border-radius:6px;padding:6px 10px'>"+sig+"</div>":"")+
-      "<div class='det' id='det_m_"+i+"'>"+
-        (s.entry||s.lo||s.hi?"<div class='g3' style='margin-top:0;margin-bottom:8px'>"+
-          (s.entry?"<div class='box'><div class='blbl'>EINSTIEG</div><div class='bval' style='color:#60a5fa'>"+s.entry.toFixed(2)+"</div></div>":"<div class='box'><div class='blbl'>52W TIEF</div><div class='bval' style='color:#f87171'>"+(s.lo?s.lo.toFixed(2):"-")+"</div></div>")+
-          (s.stop?"<div class='box'><div class='blbl'>STOP LOSS</div><div class='bval' style='color:#f87171'>"+s.stop.toFixed(2)+"</div></div>":"<div class='box'><div class='blbl'>AKTUELL</div><div class='bval' style='color:#c8d8f0'>"+s.p.toFixed(2)+"</div></div>")+
-          (s.target?"<div class='box'><div class='blbl'>ZIEL</div><div class='bval' style='color:#4ade80'>"+s.target.toFixed(2)+"</div></div>":"<div class='box'><div class='blbl'>52W HOCH</div><div class='bval' style='color:#4ade80'>"+(s.hi?s.hi.toFixed(2):"-")+"</div></div>")+
-        "</div>":"")+
-        (s.dLo?"<div class='dbox'>"+s.dLo+"% uber 52W-Tief | Stop unter "+s.ssl+" EUR</div>":"")+
-        (s.dHi?"<div class='dbox'>"+Math.abs(parseFloat(s.dHi)).toFixed(1)+"% unter 52W-Hoch</div>":"")+
-        (s.entry&&s.stop&&s.target?(function(){
-          var risk=s.entry-s.stop, rew=s.target-s.entry;
-          if(risk<=0) return "";
-          var rr=(rew/risk).toFixed(1), col=parseFloat(rr)>=2?"#4ade80":parseFloat(rr)>=1.5?"#fde047":"#f87171";
-          return "<div class='dbox'>R/R: <strong style='color:"+col+"'>"+ rr+":1</strong> | Upside: <strong style='color:#4ade80'>+"+(((s.target-s.entry)/s.entry)*100).toFixed(1)+"%</strong> | Risiko: <strong style='color:#f87171'>-"+(((s.entry-s.stop)/s.entry)*100).toFixed(1)+"%</strong></div>";
-        })():(s.ssl&&s.hi?"<div class='dbox'>R/R (Schaetzung): "+((s.hi*0.7-s.p)/(s.p-parseFloat(s.ssl))).toFixed(1)+":1</div>":""))+
-        "<div style='display:flex;gap:6px;margin-top:8px'>"+
-          "<button class='abtn' style='font-size:10px;padding:3px 9px' onclick='qadd(event,\""+s.t+"\",\""+s.n+"\","+s.p+","+(s.ssl||0)+","+(s.hi?s.hi*0.7:0)+")'>+ Portfolio</button>"+
-          "<a style='background:#0a1628;border:1px solid #2a3a58;color:#7090b8;border-radius:5px;padding:3px 8px;font-size:10px;text-decoration:none' href='https://www.tradingview.com/chart/?symbol="+s.t+"' target='_blank'>Chart</a>"+
-          "<button class='dbtn' onclick='event.stopPropagation();delMov("+i+")'>Entfernen</button>"+
-        "</div>"+
-      "</div>";
-    el.addEventListener("click",function(ev){
-      if(ev.target.tagName==="BUTTON"||ev.target.tagName==="A") return;
-      var id="det_m_"+i;
-      var d=document.getElementById(id);
-      d.style.display=d.style.display==="block"?"none":"block";
-    });
-    c.appendChild(el);
+        // Entry/Stop/Target boxes (like scanner)
+        (s.entry&&s.stop&&s.target?
+          "<div class='g3'>"+
+            "<div class='box'><div class='blbl'>EINSTIEG</div><div class='bval' style='color:#60a5fa'>"+s.entry.toFixed(2)+"</div></div>"+
+            "<div class='box'><div class='blbl'>STOP LOSS</div><div class='bval' style='color:#f87171'>"+s.stop.toFixed(2)+"</div></div>"+
+            "<div class='box'><div class='blbl'>ZIEL</div><div class='bval' style='color:#4ade80'>"+s.target.toFixed(2)+"</div></div>"+
+          "</div>":"<div style='margin-top:6px;font-size:10px;color:#3a5070'>Suche erneut um Setup zu generieren</div>")+
+        // R/R
+        rrHtml+
+        // Expandable detail
+        "<div class='det' id='det_m_"+idx+"'>"+
+          // 52W data
+          (s.lo&&s.hi?
+            "<div class='g3' style='margin-top:0;margin-bottom:8px'>"+
+              "<div class='box'><div class='blbl'>52W TIEF</div><div class='bval' style='color:#f87171'>"+s.lo.toFixed(2)+"</div></div>"+
+              "<div class='box'><div class='blbl'>ABSTAND TIEF</div><div class='bval' style='color:#c8d8f0'>"+(s.dLo||"?")+"%</div></div>"+
+              "<div class='box'><div class='blbl'>52W HOCH</div><div class='bval' style='color:#4ade80'>"+s.hi.toFixed(2)+"</div></div>"+
+            "</div>":"")+
+          // Stop info
+          (s.ssl?"<div class='dbox'>Nat. Stop (2% unter 52W-Tief): <strong>"+s.ssl+" EUR</strong></div>":"")+
+          // 52W high distance
+          (s.dHi?"<div class='dbox'>"+Math.abs(parseFloat(s.dHi)).toFixed(1)+"% unter 52W-Hoch</div>":"")+
+          // News links - most important for "why did it fall"
+          "<div style='background:#0a0a1e;border:1px solid #1e2a5f;border-radius:7px;padding:10px 12px;margin-top:8px'>"+
+            "<div class='lbl' style='margin-bottom:6px'>WARUM FIEL DIE AKTIE? - NACHRICHTEN</div>"+
+            "<div style='display:flex;gap:6px;flex-wrap:wrap'>"+
+              "<a href='"+gNews+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>Google News</a>"+
+              "<a href='"+tvNews+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>TradingView News</a>"+
+              "<a href='"+tvChart+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>Chart</a>"+
+              "<a href='https://finance.yahoo.com/quote/"+ticker+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>Yahoo Finance</a>"+
+            "</div>"+
+          "</div>"+
+          // Buttons
+          "<div style='display:flex;gap:6px;margin-top:10px;flex-wrap:wrap'>"+
+            "<button class='abtn' style='font-size:10px;padding:3px 9px' onclick='qadd(event,""+s.t+"",""+s.n+"","+(s.entry||s.p)+","+(s.stop||0)+","+(s.target||0)+")'>+ Portfolio</button>"+
+            "<button class='dbtn' onclick='event.stopPropagation();delMov("+idx+")'>Entfernen</button>"+
+          "</div>"+
+          "<div class='warn' style='margin-top:8px'>Keine Anlageberatung. Vor Order in Trade Republic pruefen!</div>"+
+        "</div>";
+
+      el.addEventListener("click",function(ev){
+        if(ev.target.tagName==="BUTTON"||ev.target.tagName==="A") return;
+        var d=document.getElementById("det_m_"+idx);
+        d.style.display=d.style.display==="block"?"none":"block";
+      });
+      c2.appendChild(el);
+    })(movers[i],i);
   }
 }
 
-// ── PORTFOLIO ─────────────────────────────────────────────────
+
 function addPos(){
   var t=document.getElementById("p_t").value.trim().toUpperCase();
   var n=document.getElementById("p_n").value.trim();
