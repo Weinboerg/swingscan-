@@ -249,8 +249,8 @@ var KD = {
 };
 
 var MKTS = {
-  dax:    ["SAP.DE","SIE.DE","ALV.DE","MUV2.DE","DTE.DE","BAS.DE","BAYN.DE","VOW3.DE","BMW.DE","ADS.DE","DBK.DE","RWE.DE","MBG.DE","IFX.DE","ENR.DE","HEI.DE","ZAL.DE","CON.DE"],
-  mdax:   ["AIXA.DE","EVT.DE","LPKF.DE","SFQ.DE","SMHN.DE","AFX.DE","KGX.DE","EMH.DE","WUW.DE"],
+  dax:    null,
+  mdax:   null,
   us:     ["NVDA","MSFT","AAPL","META","GOOGL","TSLA","AMD","MRNA","COIN","MARA","RIOT","MSTR","CLSK","BNTX","AMZN"],
   crypto: ["COIN","MARA","RIOT","MSTR","CLSK","HUT","BTBT","WULF"]
 };
@@ -375,6 +375,15 @@ function loadLive() {
   document.getElementById("liveOut").innerHTML="";
 
   var syms = MKTS[curMkt];
+  if(!syms) {
+    document.getElementById("liveLoad").className="hidden";
+    var err=document.getElementById("liveErr");
+    err.innerHTML="DAX/MDAX Live-Kurse benoetigen einen bezahlten API-Plan.<br><br>Nutze stattdessen die Links unten oder den manuellen Bereich.";
+    err.className="errbox";
+    document.getElementById("liveBtn").disabled=false;
+    document.getElementById("liveBtn").textContent="Live-Kurse laden";
+    return;
+  }
   var symStr = syms.join(",");
   var url = "https://financialmodelingprep.com/api/v3/quote/"+symStr+"?apikey="+FMP;
 
@@ -584,6 +593,10 @@ function updCur(i,v){
   var n=parseFloat(v);
   if(!isNaN(n)&&n>0){portfolio[i].current=n;saveP();renderPortSum();}
 }
+function updShares(i,v){
+  var n=parseFloat(v);
+  if(!isNaN(n)&&n>0){portfolio[i].shares=n;saveP();renderPortSum();}
+}
 
 function renderPortSum(){
   var ti=0,tv=0;
@@ -612,7 +625,7 @@ function renderPort(){
       "<td><strong style='color:#c8d8f0'>"+p.ticker+"</strong><br><span style='font-size:9px;color:#3a5070'>"+p.name+"</span></td>"+
       "<td>"+p.entry.toFixed(2)+"</td>"+
       "<td><input type='number' step='0.01' value='"+p.current.toFixed(2)+"' onchange='updCur("+i+",this.value)' style='width:65px;padding:2px 5px;font-size:11px;text-align:right'></td>"+
-      "<td>"+p.shares+"</td>"+
+      "<td><input type='number' min='1' value='"+p.shares+"' onchange='updShares("+i+",this.value)' style='width:55px;padding:2px 5px;font-size:11px;text-align:right'></td>"+
       "<td>"+inv.toFixed(0)+"</td>"+
       "<td class='"+pc+"'>"+(pnl>=0?"+":"")+pnl.toFixed(2)+"</td>"+
       "<td class='"+pc+"'>"+(pnl>=0?"+":"")+pct+"%</td>"+
