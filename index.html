@@ -95,25 +95,7 @@ tr:hover td{background:#0a1220}
 
 <!-- TAB 1: MOVERS -->
 <div id="tab1" class="hidden">
-  <div class="card">
-    <div class="lbl">LIVE SCANNER</div>
-    <div class="row" style="margin-bottom:10px" id="mktRow">
-      <button class="pb on" onclick="mkt(this,'dax')">DAX</button>
-      <button class="pb" onclick="mkt(this,'mdax')">MDAX</button>
-      <button class="pb" onclick="mkt(this,'us')">US Tech</button>
-      <button class="pb" onclick="mkt(this,'crypto')">Krypto</button>
-    </div>
-    <div class="row" style="margin-bottom:12px" id="viewRow">
-      <button class="pb on" onclick="vw(this,'los')">Verlierer</button>
-      <button class="pb" onclick="vw(this,'gain')">Gewinner</button>
-      <button class="pb" onclick="vw(this,'week')">Woche</button>
-      <button class="pb" onclick="vw(this,'sl')">Stop-Loss</button>
-    </div>
-    <button class="bigbtn" style="margin-bottom:0" id="liveBtn" onclick="loadLive()">Live-Kurse laden</button>
-    <div id="liveLoad" class="hidden" style="text-align:center;padding:16px;font-size:11px;color:#3a5070">Lade Kurse...</div>
-    <div id="liveErr" class="hidden errbox"></div>
-    <div id="liveOut" style="margin-top:10px"></div>
-  </div>
+
   <div class="card">
     <div class="lbl">LINKS</div>
     <a href="https://de.tradingview.com/markets/stocks-germany/market-movers-losers/" target="_blank" class="lnk">DAX Verlierer</a>
@@ -260,12 +242,7 @@ var KD = {
   ]
 };
 
-var MKTS = {
-  dax:    null,
-  mdax:   null,
-  us:     ["NVDA","MSFT","AAPL","META","GOOGL","TSLA","AMD","MRNA","COIN","MARA","RIOT","MSTR","CLSK","BNTX","AMZN"],
-  crypto: ["COIN","MARA","RIOT","MSTR","CLSK","HUT","BTBT","WULF"]
-};
+
 
 // ── STATE ─────────────────────────────────────────────────────
 var curSec = "tech", curTF = "mittel", curMkt = "dax", curView = "los";
@@ -364,202 +341,10 @@ function makeCard(s,i) {
 }
 
 // ── LIVE MOVERS ───────────────────────────────────────────────
-function mkt(btn, m) {
-  curMkt=m; liveData=[];
-  document.getElementById("liveOut").innerHTML="";
-  var r=document.getElementById("mktRow").querySelectorAll(".pb");
-  for(var i=0;i<r.length;i++) r[i].className="pb";
-  btn.className="pb on";
-}
-function vw(btn, v) {
-  curView=v;
-  var r=document.getElementById("viewRow").querySelectorAll(".pb");
-  for(var i=0;i<r.length;i++) r[i].className="pb";
-  btn.className="pb on";
-  if(liveData.length) renderLive();
-}
 
-function loadLive() {
-  var btn=document.getElementById("liveBtn");
-  btn.disabled=true; btn.textContent="Ladt...";
-  document.getElementById("liveLoad").className="";
-  document.getElementById("liveErr").className="hidden";
-  document.getElementById("liveOut").innerHTML="";
 
-  var syms = MKTS[curMkt];
-  if(!syms) {
-    document.getElementById("liveLoad").className="hidden";
-    var err=document.getElementById("liveErr");
-    err.innerHTML="DAX/MDAX Live-Kurse benoetigen einen bezahlten API-Plan.<br><br>Nutze stattdessen die Links unten oder den manuellen Bereich.";
-    err.className="errbox";
-    document.getElementById("liveBtn").disabled=false;
-    document.getElementById("liveBtn").textContent="Live-Kurse laden";
-    return;
-  }
-  var symStr = syms.join(",");
-  var url = "https://financialmodelingprep.com/api/v3/quote/"+symStr+"?apikey="+FMP;
 
-  fetch(url)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(!data||!data.length) throw new Error("Keine Daten - Symbole pruefen");
-      liveData=[];
-      var usdEur=0.92;
-      for(var i=0;i<data.length;i++){
-        var q=data[i];
-        var sym=q.symbol.replace(".DE","").replace(".XETRA","").replace(".HM","").replace(".F","");
-        var usd=(q.currency==="USD");
-        var px=usd?q.price*usdEur:q.price;
-        var lo=usd?(q.yearLow||0)*usdEur:(q.yearLow||0);
-        var hi=usd?(q.yearHigh||0)*usdEur:(q.yearHigh||0);
-        liveData.push({
-          t:sym, n:q.name||sym, px:px,
-          chg:q.changesPercentage||0,
-          chgA:usd?(q.change||0)*usdEur:(q.change||0),
-          lo:lo, hi:hi,
-          dLo:lo>0?(((px-lo)/lo)*100).toFixed(1):null,
-          dHi:hi>0?(((px-hi)/hi)*100).toFixed(1):null,
-          usd:usd
-        });
-      }
-      document.getElementById("liveLoad").className="hidden";
-      btn.disabled=false; btn.textContent="Aktualisieren";
-      renderLive();
-    })
-    .catch(function(e){
-      document.getElementById("liveLoad").className="hidden";
-      var err=document.getElementById("liveErr");
-      err.textContent="Fehler: "+e.message;
-      err.className="errbox";
-      btn.disabled=false; btn.textContent="Erneut versuchen";
-    });
-}
 
-function renderLive(){
-  var d=liveData.slice(), title, sub;
-  if(curView==="los"){
-    d.sort(function(a,b){return a.chg-b.chg;}); d=d.slice(0,10);
-    title="TOP 10 TAGESVERLIERER"; sub="Reversal-Kandidaten";
-  } else if(curView==="gain"){
-    d.sort(function(a,b){return b.chg-a.chg;}); d=d.slice(0,10);
-    title="TOP 10 GEWINNER"; sub="Momentum";
-  } else if(curView==="week"){
-    d.sort(function(a,b){return parseFloat(a.dHi||0)-parseFloat(b.dHi||0);}); d=d.slice(0,10);
-    title="WOCHENVERLIERER"; sub="Weiteste Distanz vom 52W-Hoch";
-  } else {
-    d.sort(function(a,b){return parseFloat(a.dLo||999)-parseFloat(b.dLo||999);});
-    d=d.filter(function(x){return x.dLo!==null;}); d=d.slice(0,12);
-    title="STOP-LOSS ANALYSE"; sub="Abstand zum 52W-Tief";
-  }
-  var c=document.getElementById("liveOut");
-  c.innerHTML="<div style='margin-bottom:10px'><strong style='color:#e0eeff;font-size:12px'>"+title+"</strong> <span style='font-size:10px;color:#3a5070'>"+sub+"</span></div>";
-  for(var i=0;i<d.length;i++){
-    var s=d[i];
-    var pos=s.chg>=0, cc=pos?"#4ade80":"#f87171", bg=pos?"#052e16":"#1c0a0a", br=pos?"#16a34a":"#dc2626";
-    var sig="";
-    if(curView==="los"){
-      if(s.chg<-8) sig="Massiver Ausverkauf - Umkehrkerze abwarten!";
-      else if(s.chg<-5) sig="Starker Ruckgang - Unterstutzung abwarten";
-      else if(s.chg<-2) sig="Moderater Ruckgang - Setup prufen";
-    } else if(curView==="sl"&&s.dLo!==null){
-      var dl=parseFloat(s.dLo), ssl=(s.lo*0.98).toFixed(2);
-      sig=(dl<5?"Nur ":"")+(dl<15?dl+"% uber 52W-Tief - Stop unter "+ssl+" EUR":dl+"% uber 52W-Tief - Guter Puffer");
-    } else if(curView==="week"&&s.dHi!==null){
-      sig=Math.abs(parseFloat(s.dHi)).toFixed(1)+"% unter 52W-Hoch";
-    }
-    var el=document.createElement("div");
-    el.className="item";
-    el.innerHTML=
-      "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px'>"+
-        "<div style='display:flex;align-items:center;gap:8px;flex:1;min-width:0'>"+
-          "<div style='background:#0a1628;border:1px solid #1e3a5f;border-radius:7px;padding:4px 9px;min-width:50px;text-align:center;flex-shrink:0'>"+
-            "<div style='font-family:monospace;font-size:12px;font-weight:700;color:#60a5fa'>"+s.t+"</div>"+
-          "</div>"+
-          "<div style='min-width:0'>"+
-            "<div style='font-size:12px;font-weight:600;color:#c8d8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+s.n+"</div>"+
-            (s.usd?"<div style='font-size:9px;color:#ca8a04'>USD x0.92</div>":"")+
-          "</div>"+
-        "</div>"+
-        "<div style='display:flex;align-items:center;gap:7px;flex-shrink:0'>"+
-          "<div style='text-align:right'>"+
-            "<div style='font-size:14px;font-weight:700;color:#c8d8f0'>"+s.px.toFixed(2)+"</div>"+
-            "<div style='font-size:10px;color:#3a5070'>"+(s.chgA>=0?"+":"")+s.chgA.toFixed(2)+"</div>"+
-          "</div>"+
-          "<span style='background:"+bg+";border:1px solid "+br+";color:"+cc+";border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700'>"+(s.chg>=0?"+":"")+s.chg.toFixed(2)+"%</span>"+
-        "</div>"+
-      "</div>"+
-      (sig?"<div style='margin-top:7px;font-size:11px;color:#8aaac8;background:#070e1a;border-radius:6px;padding:6px 10px'>"+sig+"</div>":"")+
-      "<div style='margin-top:7px;display:flex;gap:6px'>"+
-        "<button class='abtn' style='font-size:10px;padding:3px 9px' onclick='qadd(event,\""+s.t+"\",\""+s.n+"\","+s.px.toFixed(2)+","+(s.lo?(s.lo*0.98).toFixed(2):0)+","+(s.hi?(s.hi*0.7).toFixed(2):0)+")'>+ Portfolio</button>"+
-        "<a style='background:#0a1628;border:1px solid #2a3a58;color:#7090b8;border-radius:5px;padding:3px 8px;font-size:10px;text-decoration:none' href='https://www.tradingview.com/chart/?symbol="+s.t+"' target='_blank'>Chart</a>"+
-      "</div>";
-    c.appendChild(el);
-  }
-}
-
-// ── MANUAL MOVERS ─────────────────────────────────────────────
-function searchTicker(){
-  var raw = document.getElementById("mv_search").value.trim().toUpperCase();
-  if(!raw){alert("Bitte Ticker eingeben.");return;}
-  var btn = document.getElementById("mv_searchBtn");
-  btn.textContent="Suche..."; btn.disabled=true;
-  document.getElementById("mv_result").className="hidden";
-  document.getElementById("mv_err").className="hidden";
-
-  // Try Yahoo Finance via allorigins proxy
-  var usdEur = 0.92;
-  var url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols="+encodeURIComponent(raw)+"&fields=symbol,shortName,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekLow,fiftyTwoWeekHigh,currency";
-  var proxy = "https://api.allorigins.win/get?url="+encodeURIComponent(url);
-
-  fetch(proxy)
-    .then(function(r){return r.json();})
-    .then(function(raw2){
-      var data = raw2.contents ? JSON.parse(raw2.contents) : raw2;
-      var q = data && data.quoteResponse && data.quoteResponse.result && data.quoteResponse.result[0];
-      if(!q) throw new Error("Nicht gefunden");
-      var isUSD = q.currency==="USD";
-      var px  = isUSD ? q.regularMarketPrice*usdEur : q.regularMarketPrice;
-      var lo  = isUSD ? (q.fiftyTwoWeekLow||0)*usdEur  : (q.fiftyTwoWeekLow||0);
-      var hi  = isUSD ? (q.fiftyTwoWeekHigh||0)*usdEur : (q.fiftyTwoWeekHigh||0);
-      var chg = q.regularMarketChangePercent||0;
-      var sym = q.symbol.replace(".DE","").replace(".F","");
-      document.getElementById("mv_t").value  = sym;
-      document.getElementById("mv_n").value  = q.shortName||sym;
-      document.getElementById("mv_p").value  = px.toFixed(2);
-      document.getElementById("mv_c").value  = chg.toFixed(2);
-      document.getElementById("mv_lo").value = lo>0?lo.toFixed(2):"";
-      document.getElementById("mv_hi").value = hi>0?hi.toFixed(2):"";
-      document.getElementById("mv_result").className="";
-      document.getElementById("mv_search").value="";
-    })
-    .catch(function(e){
-      var err=document.getElementById("mv_err");
-      err.textContent="Nicht gefunden: "+e.message+". Versuche z.B. BAYN.DE fuer Bayer oder NVDA fuer Nvidia.";
-      err.className="";
-    })
-    .finally(function(){
-      btn.textContent="Suchen"; btn.disabled=false;
-    });
-}
-
-function addMov(){
-  var t=document.getElementById("mv_t").value.trim().toUpperCase();
-  var n=document.getElementById("mv_n").value.trim()||t;
-  var p=parseFloat(document.getElementById("mv_p").value);
-  var c=parseFloat(document.getElementById("mv_c").value);
-  var lo=parseFloat(document.getElementById("mv_lo").value);
-  var hi=parseFloat(document.getElementById("mv_hi").value);
-  if(!t||isNaN(p)){alert("Ticker und Kurs benoetigt.");return;}
-  var dLo=(!isNaN(lo)&&lo>0)?(((p-lo)/lo)*100).toFixed(1):null;
-  var dHi=(!isNaN(hi)&&hi>0)?(((p-hi)/hi)*100).toFixed(1):null;
-  var ssl=(!isNaN(lo)&&lo>0)?(lo*0.98).toFixed(2):null;
-  movers.unshift({t:t,n:n,p:p,c:isNaN(c)?null:c,lo:isNaN(lo)?null:lo,hi:isNaN(hi)?null:hi,dLo:dLo,dHi:dHi,ssl:ssl});
-  saveM();
-  ["mv_t","mv_n","mv_p","mv_c","mv_lo","mv_hi"].forEach(function(id){document.getElementById(id).value="";});
-  renderMov();
-}
-function clearMov(){if(!confirm("Alle loeschen?"))return;movers=[];saveM();renderMov();}
-function delMov(i){movers.splice(i,1);saveM();renderMov();}
 function renderMov(){
   var c=document.getElementById("movOut");
   if(!movers.length){c.innerHTML="";return;}
