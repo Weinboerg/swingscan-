@@ -118,10 +118,19 @@ tr:hover td{background:#0a1220}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div><div class="lbl">NAME</div><input id="mv_n" placeholder="Name"></div>
         <div><div class="lbl">TICKER</div><input id="mv_t" placeholder="Ticker"></div>
-        <div><div class="lbl">KURS (EUR)</div><input id="mv_p" type="number" step="0.01" placeholder="0.00"></div>
-        <div><div class="lbl">VERAEND. %</div><input id="mv_c" type="number" step="0.01" placeholder="0.00"></div>
-        <div><div class="lbl">52W-TIEF</div><input id="mv_lo" type="number" step="0.01" placeholder="0.00"></div>
-        <div><div class="lbl">52W-HOCH</div><input id="mv_hi" type="number" step="0.01" placeholder="0.00"></div>
+        <div><div class="lbl">KURS (EUR)</div><input id="mv_p" type="number" step="0.01" placeholder="0.00" onchange="calcSetup()"></div>
+        <div><div class="lbl">VERAEND. % (heute)</div><input id="mv_c" type="number" step="0.01" placeholder="0.00"></div>
+        <div><div class="lbl">52W-TIEF</div><input id="mv_lo" type="number" step="0.01" placeholder="0.00" onchange="calcSetup()"></div>
+        <div><div class="lbl">52W-HOCH</div><input id="mv_hi" type="number" step="0.01" placeholder="0.00" onchange="calcSetup()"></div>
+      </div>
+      <div id="mv_setup" class="hidden" style="background:#050c18;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
+        <div class="lbl" style="margin-bottom:8px">SETUP-VORSCHLAG (anpassbar)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div><div class="lbl">EINSTIEG (EUR)</div><input id="mv_entry" type="number" step="0.01" onchange="calcRR()"></div>
+          <div><div class="lbl">STOP LOSS (EUR)</div><input id="mv_stop" type="number" step="0.01" onchange="calcRR()"></div>
+          <div><div class="lbl">ZIEL (EUR)</div><input id="mv_tg" type="number" step="0.01" onchange="calcRR()"></div>
+        </div>
+        <div id="mv_rr" style="font-size:12px;color:#6a8aaa;background:#070e1a;border-radius:7px;padding:8px 12px"></div>
       </div>
       <button class="abtn" onclick="addMov()">+ Zur Analyse hinzufuegen</button>
     </div>
@@ -375,14 +384,19 @@ function renderMov(){
       "</div>"+
       (sig?"<div style='margin-top:7px;font-size:11px;color:#8aaac8;background:#070e1a;border-radius:6px;padding:6px 10px'>"+sig+"</div>":"")+
       "<div class='det' id='det_m_"+i+"'>"+
-        (s.lo||s.hi?"<div class='g3' style='margin-top:0;margin-bottom:8px'>"+
-          "<div class='box'><div class='blbl'>52W TIEF</div><div class='bval' style='color:#f87171'>"+(s.lo||"-")+"</div></div>"+
-          "<div class='box'><div class='blbl'>AKTUELL</div><div class='bval' style='color:#c8d8f0'>"+s.p.toFixed(2)+"</div></div>"+
-          "<div class='box'><div class='blbl'>52W HOCH</div><div class='bval' style='color:#4ade80'>"+(s.hi||"-")+"</div></div>"+
+        (s.entry||s.lo||s.hi?"<div class='g3' style='margin-top:0;margin-bottom:8px'>"+
+          (s.entry?"<div class='box'><div class='blbl'>EINSTIEG</div><div class='bval' style='color:#60a5fa'>"+s.entry.toFixed(2)+"</div></div>":"<div class='box'><div class='blbl'>52W TIEF</div><div class='bval' style='color:#f87171'>"+(s.lo?s.lo.toFixed(2):"-")+"</div></div>")+
+          (s.stop?"<div class='box'><div class='blbl'>STOP LOSS</div><div class='bval' style='color:#f87171'>"+s.stop.toFixed(2)+"</div></div>":"<div class='box'><div class='blbl'>AKTUELL</div><div class='bval' style='color:#c8d8f0'>"+s.p.toFixed(2)+"</div></div>")+
+          (s.target?"<div class='box'><div class='blbl'>ZIEL</div><div class='bval' style='color:#4ade80'>"+s.target.toFixed(2)+"</div></div>":"<div class='box'><div class='blbl'>52W HOCH</div><div class='bval' style='color:#4ade80'>"+(s.hi?s.hi.toFixed(2):"-")+"</div></div>")+
         "</div>":"")+
         (s.dLo?"<div class='dbox'>"+s.dLo+"% uber 52W-Tief | Stop unter "+s.ssl+" EUR</div>":"")+
         (s.dHi?"<div class='dbox'>"+Math.abs(parseFloat(s.dHi)).toFixed(1)+"% unter 52W-Hoch</div>":"")+
-        (s.ssl&&s.hi?"<div class='dbox'>R/R: "+((s.hi*0.7-s.p)/(s.p-parseFloat(s.ssl))).toFixed(1)+":1 | Ziel: "+(s.hi*0.7).toFixed(2)+" EUR</div>":"")+
+        (s.entry&&s.stop&&s.target?(function(){
+          var risk=s.entry-s.stop, rew=s.target-s.entry;
+          if(risk<=0) return "";
+          var rr=(rew/risk).toFixed(1), col=parseFloat(rr)>=2?"#4ade80":parseFloat(rr)>=1.5?"#fde047":"#f87171";
+          return "<div class='dbox'>R/R: <strong style='color:"+col+"'>"+ rr+":1</strong> | Upside: <strong style='color:#4ade80'>+"+(((s.target-s.entry)/s.entry)*100).toFixed(1)+"%</strong> | Risiko: <strong style='color:#f87171'>-"+(((s.entry-s.stop)/s.entry)*100).toFixed(1)+"%</strong></div>";
+        })():(s.ssl&&s.hi?"<div class='dbox'>R/R (Schaetzung): "+((s.hi*0.7-s.p)/(s.p-parseFloat(s.ssl))).toFixed(1)+":1</div>":""))+
         "<div style='display:flex;gap:6px;margin-top:8px'>"+
           "<button class='abtn' style='font-size:10px;padding:3px 9px' onclick='qadd(event,\""+s.t+"\",\""+s.n+"\","+s.p+","+(s.ssl||0)+","+(s.hi?s.hi*0.7:0)+")'>+ Portfolio</button>"+
           "<a style='background:#0a1628;border:1px solid #2a3a58;color:#7090b8;border-radius:5px;padding:3px 8px;font-size:10px;text-decoration:none' href='https://www.tradingview.com/chart/?symbol="+s.t+"' target='_blank'>Chart</a>"+
@@ -507,19 +521,24 @@ function refreshPx(){
     });
 }
 function addMov(){
-  var t = document.getElementById("mv_t").value.trim().toUpperCase();
-  var n = document.getElementById("mv_n").value.trim() || t;
-  var p = parseFloat(document.getElementById("mv_p").value);
-  var ch= parseFloat(document.getElementById("mv_c").value);
-  var lo= parseFloat(document.getElementById("mv_lo").value);
-  var hi= parseFloat(document.getElementById("mv_hi").value);
+  var t  = document.getElementById("mv_t").value.trim().toUpperCase();
+  var n  = document.getElementById("mv_n").value.trim() || t;
+  var p  = parseFloat(document.getElementById("mv_p").value);
+  var ch = parseFloat(document.getElementById("mv_c").value);
+  var lo = parseFloat(document.getElementById("mv_lo").value);
+  var hi = parseFloat(document.getElementById("mv_hi").value);
+  var en = parseFloat(document.getElementById("mv_entry").value);
+  var sl = parseFloat(document.getElementById("mv_stop").value);
+  var tg = parseFloat(document.getElementById("mv_tg").value);
   if(!t || isNaN(p)){ alert("Ticker und Kurs benoetigt."); return; }
   var dLo = (!isNaN(lo)&&lo>0) ? (((p-lo)/lo)*100).toFixed(1) : null;
   var dHi = (!isNaN(hi)&&hi>0) ? (((p-hi)/hi)*100).toFixed(1) : null;
   var ssl = (!isNaN(lo)&&lo>0) ? (lo*0.98).toFixed(2) : null;
-  movers.unshift({t:t,n:n,p:p,c:isNaN(ch)?null:ch,lo:isNaN(lo)?null:lo,hi:isNaN(hi)?null:hi,dLo:dLo,dHi:dHi,ssl:ssl});
+  movers.unshift({t:t,n:n,p:p,c:isNaN(ch)?null:ch,lo:isNaN(lo)?null:lo,hi:isNaN(hi)?null:hi,dLo:dLo,dHi:dHi,ssl:ssl,
+    entry:isNaN(en)?null:en, stop:isNaN(sl)?null:sl, target:isNaN(tg)?null:tg});
   saveM();
   document.getElementById("mv_result").className = "hidden";
+  document.getElementById("mv_setup").className = "hidden";
   renderMov();
 }
 
@@ -530,6 +549,39 @@ function clearMov(){
 
 function delMov(i){
   movers.splice(i,1); saveM(); renderMov();
+}
+
+function calcSetup(){
+  var p  = parseFloat(document.getElementById("mv_p").value);
+  var lo = parseFloat(document.getElementById("mv_lo").value);
+  var hi = parseFloat(document.getElementById("mv_hi").value);
+  if(isNaN(p) || p<=0) return;
+  var stop  = (!isNaN(lo)&&lo>0) ? (lo*0.98) : (p*0.93);
+  var tg    = (!isNaN(hi)&&hi>0) ? (hi*0.70) : (p*1.15);
+  document.getElementById("mv_entry").value = p.toFixed(2);
+  document.getElementById("mv_stop").value  = stop.toFixed(2);
+  document.getElementById("mv_tg").value    = tg.toFixed(2);
+  document.getElementById("mv_setup").className = "";
+  calcRR();
+}
+
+function calcRR(){
+  var e  = parseFloat(document.getElementById("mv_entry").value);
+  var sl = parseFloat(document.getElementById("mv_stop").value);
+  var tg = parseFloat(document.getElementById("mv_tg").value);
+  var rr = document.getElementById("mv_rr");
+  if(isNaN(e)||isNaN(sl)||isNaN(tg)||sl>=e){ rr.innerHTML=""; return; }
+  var risk   = e - sl;
+  var reward = tg - e;
+  var ratio  = (reward/risk).toFixed(1);
+  var upside = ((tg-e)/e*100).toFixed(1);
+  var downside = ((e-sl)/e*100).toFixed(1);
+  var col = parseFloat(ratio)>=2 ? "#4ade80" : parseFloat(ratio)>=1.5 ? "#fde047" : "#f87171";
+  rr.innerHTML =
+    "Risiko: <strong style='color:#f87171'>-"+downside+"%</strong> &nbsp;|&nbsp; "+
+    "Upside: <strong style='color:#4ade80'>+"+upside+"%</strong> &nbsp;|&nbsp; "+
+    "R/R: <strong style='color:"+col+"'>"+ratio+":1</strong>"+
+    (parseFloat(ratio)<2?"&nbsp; <span style='color:#ca8a04;font-size:10px'>Ziel anpassen fuer besseres R/R</span>":"");
 }
 
 function searchTicker(){
@@ -571,6 +623,7 @@ function searchTicker(){
     btn.innerHTML = "Suchen";
     btn.disabled = false;
     btn.style.opacity = "1";
+    calcSetup();
   }
 
   function fail(){
