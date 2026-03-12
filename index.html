@@ -122,17 +122,29 @@ tr:hover td{background:#0a1220}
     <a href="https://de.tradingview.com/screener/" target="_blank" class="lnk">Screener</a>
   </div>
   <div class="card">
-    <div class="lbl">MANUELL EINTRAGEN</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div><div class="lbl">TICKER</div><input id="mv_t" placeholder="BAYN"></div>
-      <div><div class="lbl">NAME</div><input id="mv_n" placeholder="Bayer AG"></div>
-      <div><div class="lbl">KURS (EUR)</div><input id="mv_p" type="number" step="0.01" placeholder="24.10"></div>
-      <div><div class="lbl">VERAEND. %</div><input id="mv_c" type="number" step="0.01" placeholder="-4.20"></div>
-      <div><div class="lbl">52W-TIEF</div><input id="mv_lo" type="number" step="0.01" placeholder="20.50"></div>
-      <div><div class="lbl">52W-HOCH</div><input id="mv_hi" type="number" step="0.01" placeholder="35.80"></div>
+    <div class="lbl">TICKER SUCHEN – DATEN AUTOMATISCH LADEN</div>
+    <div style="background:#070e1a;border-radius:8px;padding:10px 12px;font-size:11px;color:#6a8aaa;margin-bottom:12px;line-height:1.8">
+      📱 Trade Republic → Top Movers → Aktie antippen → Ticker oben kopieren (z.B. <strong style="color:#60a5fa">BAYN</strong>, <strong style="color:#60a5fa">IFX</strong>, <strong style="color:#60a5fa">NVDA</strong>)<br>
+      Fuer deutsche Aktien: Ticker + <strong style="color:#fde047">.DE</strong> eingeben (z.B. <strong style="color:#60a5fa">BAYN.DE</strong>)
     </div>
-    <button class="abtn" onclick="addMov()">Analysieren</button>
-    <button class="dbtn" style="margin-left:8px" onclick="clearMov()">Leeren</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input id="mv_search" placeholder="Ticker eingeben z.B. BAYN.DE oder NVDA" style="flex:1" onkeydown="if(event.key==='Enter')searchTicker()">
+      <button class="rbtn" id="mv_searchBtn" onclick="searchTicker()" style="white-space:nowrap">Suchen</button>
+    </div>
+    <div id="mv_result" class="hidden" style="background:#070e1a;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:11px;color:#3a5070;margin-bottom:8px">GEFUNDEN – pruefen und bestaetigen:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><div class="lbl">NAME</div><input id="mv_n" placeholder="Name"></div>
+        <div><div class="lbl">TICKER</div><input id="mv_t" placeholder="Ticker"></div>
+        <div><div class="lbl">KURS (EUR)</div><input id="mv_p" type="number" step="0.01" placeholder="0.00"></div>
+        <div><div class="lbl">VERAEND. %</div><input id="mv_c" type="number" step="0.01" placeholder="0.00"></div>
+        <div><div class="lbl">52W-TIEF</div><input id="mv_lo" type="number" step="0.01" placeholder="0.00"></div>
+        <div><div class="lbl">52W-HOCH</div><input id="mv_hi" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <button class="abtn" onclick="addMov()">+ Zur Analyse hinzufuegen</button>
+    </div>
+    <div id="mv_err" class="hidden" style="background:#1c0a0a;border:1px solid #7f1d1d;border-radius:7px;padding:8px 12px;font-size:11px;color:#fca5a5;margin-bottom:10px"></div>
+    <button class="dbtn" onclick="clearMov()">Liste leeren</button>
   </div>
   <div id="movOut"></div>
 </div>
@@ -486,6 +498,50 @@ function renderLive(){
 }
 
 // ── MANUAL MOVERS ─────────────────────────────────────────────
+function searchTicker(){
+  var raw = document.getElementById("mv_search").value.trim().toUpperCase();
+  if(!raw){alert("Bitte Ticker eingeben.");return;}
+  var btn = document.getElementById("mv_searchBtn");
+  btn.textContent="Suche..."; btn.disabled=true;
+  document.getElementById("mv_result").className="hidden";
+  document.getElementById("mv_err").className="hidden";
+
+  // Try Yahoo Finance via allorigins proxy
+  var usdEur = 0.92;
+  var url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols="+encodeURIComponent(raw)+"&fields=symbol,shortName,regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekLow,fiftyTwoWeekHigh,currency";
+  var proxy = "https://api.allorigins.win/get?url="+encodeURIComponent(url);
+
+  fetch(proxy)
+    .then(function(r){return r.json();})
+    .then(function(raw2){
+      var data = raw2.contents ? JSON.parse(raw2.contents) : raw2;
+      var q = data && data.quoteResponse && data.quoteResponse.result && data.quoteResponse.result[0];
+      if(!q) throw new Error("Nicht gefunden");
+      var isUSD = q.currency==="USD";
+      var px  = isUSD ? q.regularMarketPrice*usdEur : q.regularMarketPrice;
+      var lo  = isUSD ? (q.fiftyTwoWeekLow||0)*usdEur  : (q.fiftyTwoWeekLow||0);
+      var hi  = isUSD ? (q.fiftyTwoWeekHigh||0)*usdEur : (q.fiftyTwoWeekHigh||0);
+      var chg = q.regularMarketChangePercent||0;
+      var sym = q.symbol.replace(".DE","").replace(".F","");
+      document.getElementById("mv_t").value  = sym;
+      document.getElementById("mv_n").value  = q.shortName||sym;
+      document.getElementById("mv_p").value  = px.toFixed(2);
+      document.getElementById("mv_c").value  = chg.toFixed(2);
+      document.getElementById("mv_lo").value = lo>0?lo.toFixed(2):"";
+      document.getElementById("mv_hi").value = hi>0?hi.toFixed(2):"";
+      document.getElementById("mv_result").className="";
+      document.getElementById("mv_search").value="";
+    })
+    .catch(function(e){
+      var err=document.getElementById("mv_err");
+      err.textContent="Nicht gefunden: "+e.message+". Versuche z.B. BAYN.DE fuer Bayer oder NVDA fuer Nvidia.";
+      err.className="";
+    })
+    .finally(function(){
+      btn.textContent="Suchen"; btn.disabled=false;
+    });
+}
+
 function addMov(){
   var t=document.getElementById("mv_t").value.trim().toUpperCase();
   var n=document.getElementById("mv_n").value.trim()||t;
