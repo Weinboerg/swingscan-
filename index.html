@@ -28,7 +28,7 @@ body{font-family:system-ui,sans-serif;background:#050c18;color:#a0b8d0;min-heigh
 .box{background:#070e1a;border-radius:7px;padding:7px 10px;border:1px solid #0d1e35;text-align:center}
 .blbl{font-size:9px;color:#2a4060;letter-spacing:.08em;margin-bottom:3px}
 .bval{font-size:14px;font-weight:700}
-.badge{border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700}
+.badge{border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block}
 .bSB{background:#052e16;border:1px solid #16a34a;color:#4ade80}
 .bB{background:#052e16;border:1px solid #16a34a;color:#86efac}
 .bW{background:#1c1400;border:1px solid #ca8a04;color:#fde047}
@@ -41,6 +41,7 @@ body{font-family:system-ui,sans-serif;background:#050c18;color:#a0b8d0;min-heigh
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:14px}
 .sbox{background:#080f1e;border:1px solid #0d1e35;border-radius:9px;padding:10px 12px}
 .hidden{display:none}
+.newsbox{background:#0a0a1e;border:1px solid #1e2a5f;border-radius:7px;padding:10px 12px;margin-top:8px}
 input,select{background:#050c18;border:1px solid #0d1e35;border-radius:7px;padding:7px 10px;color:#8aaac8;font-size:12px;outline:none;font-family:inherit;width:100%}
 input:focus,select:focus{border-color:#3b82f6}
 select option{background:#0a1220}
@@ -58,43 +59,76 @@ tr:hover td{background:#0a1220}
     SWING<span style="color:#3b82f6">SCAN</span>
     <span style="font-size:10px;color:#1e3a5f;background:#0a1628;border:1px solid #1e3a5f;border-radius:4px;padding:2px 6px;margin-left:6px">2026</span>
   </div>
-  <div style="font-size:11px;color:#2a4a68">Trade Republic / LS Exchange · Swing Trading</div>
+  <div style="font-size:11px;color:#2a4a68">Trade Republic / LS Exchange</div>
 </div>
 
 <div class="nav">
-  <button class="nb on" id="nav0" onclick="tab(0)">Scanner</button>
-  <button class="nb" id="nav1" onclick="tab(1)">Top Movers</button>
-  <button class="nb" id="nav2" onclick="tab(2)">Portfolio</button>
-  <button class="nb" id="nav3" onclick="tab(3)">Guide</button>
+  <button class="nb on" id="nav0" onclick="showTab(0)">Scanner</button>
+  <button class="nb" id="nav1" onclick="showTab(1)">Top Movers</button>
+  <button class="nb" id="nav2" onclick="showTab(2)">Portfolio</button>
+  <button class="nb" id="nav3" onclick="showTab(3)">Guide</button>
 </div>
 
-<!-- TAB 0: SCANNER -->
+<!-- TAB 0 SCANNER -->
 <div id="tab0">
   <div class="card">
     <div class="lbl">SEGMENT</div>
-    <div class="row" id="secRow">
-      <button class="pb on" onclick="sec(this,'tech')">Tech</button>
-      <button class="pb" onclick="sec(this,'bio')">Biotech</button>
-      <button class="pb" onclick="sec(this,'small')">Small Caps</button>
-      <button class="pb" onclick="sec(this,'div')">Dividende</button>
-      <button class="pb" onclick="sec(this,'roh')">Rohstoffe</button>
-      <button class="pb" onclick="sec(this,'krypto')">Krypto</button>
+    <div class="row">
+      <button class="pb on" onclick="setSec(this,'tech')">Tech</button>
+      <button class="pb" onclick="setSec(this,'bio')">Biotech</button>
+      <button class="pb" onclick="setSec(this,'small')">Small Caps</button>
+      <button class="pb" onclick="setSec(this,'div')">Dividende</button>
+      <button class="pb" onclick="setSec(this,'roh')">Rohstoffe</button>
+      <button class="pb" onclick="setSec(this,'krypto')">Krypto</button>
     </div>
   </div>
   <div class="card">
     <div class="lbl">ZEITRAHMEN</div>
-    <div class="row" id="tfRow">
-      <button class="pb on" onclick="tf(this,'kurz')">3-7 Tage</button>
-      <button class="pb" onclick="tf(this,'mittel')">1-3 Wochen</button>
-      <button class="pb" onclick="tf(this,'lang')">4-8 Wochen</button>
+    <div class="row">
+      <button class="pb on" onclick="setTF(this,'kurz')">3-7 Tage</button>
+      <button class="pb" onclick="setTF(this,'mittel')">1-3 Wochen</button>
+      <button class="pb" onclick="setTF(this,'lang')">4-8 Wochen</button>
     </div>
   </div>
-  <button class="bigbtn" id="scanBtn" onclick="scan()">Kandidaten anzeigen</button>
+  <button class="bigbtn" id="scanBtn" onclick="runScan()">Kandidaten anzeigen</button>
   <div id="scanOut"></div>
 </div>
 
-<!-- TAB 1: MOVERS -->
+<!-- TAB 1 TOP MOVERS -->
 <div id="tab1" class="hidden">
+
+  <div class="card">
+    <div class="lbl">TICKER SUCHEN</div>
+    <div style="background:#070e1a;border-radius:8px;padding:10px 12px;font-size:11px;color:#6a8aaa;margin-bottom:12px;line-height:1.8">
+      Trade Republic aufmachen, Top Movers antippen, Ticker kopieren (z.B. <strong style="color:#60a5fa">DBK.DE</strong> oder <strong style="color:#60a5fa">AAPL</strong>) und hier einfuegen.
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input id="mv_search" placeholder="z.B. DBK.DE oder AAPL" onkeydown="if(event.key==='Enter')doSearch()" style="flex:1">
+      <button class="rbtn" id="searchBtn" onclick="doSearch()" style="white-space:nowrap;min-width:80px">Suchen</button>
+    </div>
+    <div id="searchLoad" class="hidden" style="font-size:11px;color:#3a5070;padding:4px 0">Suche laeuft...</div>
+    <div id="searchErr" class="hidden errbox"></div>
+
+    <div id="searchResult" class="hidden" style="background:#050c18;border:1px solid #1e3a5f;border-radius:8px;padding:14px;margin-top:4px">
+      <div class="lbl" style="margin-bottom:10px">GEFUNDEN - SETUP PRUEFEN UND ANPASSEN</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><div class="lbl">TICKER</div><input id="mv_t" placeholder="Ticker"></div>
+        <div><div class="lbl">NAME</div><input id="mv_n" placeholder="Name"></div>
+        <div><div class="lbl">KURS (EUR)</div><input id="mv_p" type="number" step="0.01" onchange="recalc()"></div>
+        <div><div class="lbl">VERAEND. % HEUTE</div><input id="mv_c" type="number" step="0.01"></div>
+        <div><div class="lbl">52W-TIEF</div><input id="mv_lo" type="number" step="0.01" onchange="recalc()"></div>
+        <div><div class="lbl">52W-HOCH</div><input id="mv_hi" type="number" step="0.01" onchange="recalc()"></div>
+      </div>
+      <div class="lbl" style="margin-bottom:8px">SETUP-VORSCHLAG (anpassbar)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><div class="lbl">EINSTIEG</div><input id="mv_entry" type="number" step="0.01" onchange="recalcRR()"></div>
+        <div><div class="lbl">STOP LOSS</div><input id="mv_stop" type="number" step="0.01" onchange="recalcRR()"></div>
+        <div><div class="lbl">ZIEL</div><input id="mv_tg" type="number" step="0.01" onchange="recalcRR()"></div>
+      </div>
+      <div id="rrLine" style="font-size:12px;color:#6a8aaa;background:#070e1a;border-radius:7px;padding:8px 12px;margin-bottom:12px"></div>
+      <button class="abtn" onclick="addMover()">+ Zur Analyse hinzufuegen</button>
+    </div>
+  </div>
 
   <div class="card">
     <div class="lbl">LINKS</div>
@@ -102,45 +136,16 @@ tr:hover td{background:#0a1220}
     <a href="https://de.tradingview.com/markets/stocks-usa/market-movers-losers/" target="_blank" class="lnk">US Verlierer</a>
     <a href="https://finance.yahoo.com/markets/stocks/losers/" target="_blank" class="lnk">Yahoo</a>
     <a href="https://de.tradingview.com/screener/" target="_blank" class="lnk">Screener</a>
+    <a href="https://www.onvista.de/aktien/kurslisten/dax" target="_blank" class="lnk">Onvista DAX</a>
   </div>
-  <div class="card">
-    <div class="lbl">TICKER SUCHEN – DATEN AUTOMATISCH LADEN</div>
-    <div style="background:#070e1a;border-radius:8px;padding:10px 12px;font-size:11px;color:#6a8aaa;margin-bottom:12px;line-height:1.8">
-      📱 Trade Republic → Top Movers → Aktie antippen → Ticker oben kopieren (z.B. <strong style="color:#60a5fa">BAYN</strong>, <strong style="color:#60a5fa">IFX</strong>, <strong style="color:#60a5fa">NVDA</strong>)<br>
-      Fuer deutsche Aktien: Ticker + <strong style="color:#fde047">.DE</strong> eingeben (z.B. <strong style="color:#60a5fa">BAYN.DE</strong>)
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <input id="mv_search" placeholder="Ticker eingeben z.B. BAYN.DE oder NVDA" style="flex:1" onkeydown="if(event.key==='Enter')searchTicker()">
-      <button class="rbtn" id="mv_searchBtn" onclick="searchTicker()" style="white-space:nowrap">Suchen</button>
-    </div>
-    <div id="mv_result" class="hidden" style="background:#070e1a;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
-      <div style="font-size:11px;color:#3a5070;margin-bottom:8px">GEFUNDEN – pruefen und bestaetigen:</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div><div class="lbl">NAME</div><input id="mv_n" placeholder="Name"></div>
-        <div><div class="lbl">TICKER</div><input id="mv_t" placeholder="Ticker"></div>
-        <div><div class="lbl">KURS (EUR)</div><input id="mv_p" type="number" step="0.01" placeholder="0.00" onchange="calcSetup()"></div>
-        <div><div class="lbl">VERAEND. % (heute)</div><input id="mv_c" type="number" step="0.01" placeholder="0.00"></div>
-        <div><div class="lbl">52W-TIEF</div><input id="mv_lo" type="number" step="0.01" placeholder="0.00" onchange="calcSetup()"></div>
-        <div><div class="lbl">52W-HOCH</div><input id="mv_hi" type="number" step="0.01" placeholder="0.00" onchange="calcSetup()"></div>
-      </div>
-      <div id="mv_setup" class="hidden" style="background:#050c18;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
-        <div class="lbl" style="margin-bottom:8px">SETUP-VORSCHLAG (anpassbar)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-          <div><div class="lbl">EINSTIEG (EUR)</div><input id="mv_entry" type="number" step="0.01" onchange="calcRR()"></div>
-          <div><div class="lbl">STOP LOSS (EUR)</div><input id="mv_stop" type="number" step="0.01" onchange="calcRR()"></div>
-          <div><div class="lbl">ZIEL (EUR)</div><input id="mv_tg" type="number" step="0.01" onchange="calcRR()"></div>
-        </div>
-        <div id="mv_rr" style="font-size:12px;color:#6a8aaa;background:#070e1a;border-radius:7px;padding:8px 12px"></div>
-      </div>
-      <button class="abtn" onclick="addMov()">+ Zur Analyse hinzufuegen</button>
-    </div>
-    <div id="mv_err" class="hidden" style="background:#1c0a0a;border:1px solid #7f1d1d;border-radius:7px;padding:8px 12px;font-size:11px;color:#fca5a5;margin-bottom:10px"></div>
-    <button class="dbtn" onclick="clearMov()">Liste leeren</button>
+
+  <div id="moverList"></div>
+  <div style="margin-top:6px">
+    <button class="dbtn" onclick="clearMovers()">Liste leeren</button>
   </div>
-  <div id="movOut"></div>
 </div>
 
-<!-- TAB 2: PORTFOLIO -->
+<!-- TAB 2 PORTFOLIO -->
 <div id="tab2" class="hidden">
   <div class="sgrid" id="portSum"></div>
   <div class="card">
@@ -148,11 +153,11 @@ tr:hover td{background:#0a1220}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div><div class="lbl">TICKER</div><input id="p_t" placeholder="VALNEVA"></div>
       <div><div class="lbl">NAME</div><input id="p_n" placeholder="Valneva SE"></div>
-      <div><div class="lbl">EINSTIEG (EUR)</div><input id="p_e" type="number" step="0.01" placeholder="4.00"></div>
-      <div><div class="lbl">ANZAHL</div><input id="p_s" type="number" placeholder="100"></div>
-      <div><div class="lbl">AKT. KURS (EUR)</div><input id="p_c" type="number" step="0.01" placeholder="4.86"></div>
-      <div><div class="lbl">STOP (EUR)</div><input id="p_sl" type="number" step="0.01" placeholder="3.90"></div>
-      <div><div class="lbl">ZIEL (EUR)</div><input id="p_tg" type="number" step="0.01" placeholder="7.50"></div>
+      <div><div class="lbl">EINSTIEG (EUR)</div><input id="p_e" type="number" step="0.01"></div>
+      <div><div class="lbl">ANZAHL</div><input id="p_s" type="number"></div>
+      <div><div class="lbl">AKT. KURS (EUR)</div><input id="p_c" type="number" step="0.01"></div>
+      <div><div class="lbl">STOP (EUR)</div><input id="p_sl" type="number" step="0.01"></div>
+      <div><div class="lbl">ZIEL (EUR)</div><input id="p_tg" type="number" step="0.01"></div>
       <div><div class="lbl">BOERSE</div>
         <select id="p_ex">
           <option>LS Exchange (TR)</option>
@@ -164,22 +169,25 @@ tr:hover td{background:#0a1220}
       </div>
     </div>
     <input id="p_no" placeholder="Notizen..." style="margin-bottom:10px">
-    <button class="abtn" onclick="addPos()">Hinzufuegen</button>
-    <button class="rbtn" style="margin-left:8px" id="rfBtn" onclick="refreshPx()">Kurse aktualisieren</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="abtn" onclick="addPos()">Hinzufuegen</button>
+      <button class="rbtn" id="rfBtn" onclick="refreshPx()">Kurse aktualisieren</button>
+      <span style="font-size:10px;color:#2a4060">via Yahoo Finance</span>
+    </div>
   </div>
   <div class="card" style="overflow-x:auto">
     <table>
       <thead><tr>
-        <th>TICKER</th><th>EINSTIEG</th><th>KURS</th><th>STUCK</th><th>INVEST</th><th>P&L EUR</th><th>P&L %</th><th>STOP</th><th>ZIEL</th><th>BOERSE</th><th></th>
+        <th>TICKER</th><th>EINSTIEG</th><th>KURS</th><th>STUECK</th><th>INVEST</th><th>P&amp;L EUR</th><th>P&amp;L %</th><th>STOP</th><th>ZIEL</th><th>BOERSE</th><th></th>
       </tr></thead>
       <tbody id="portTbl"></tbody>
     </table>
     <div id="portEmpty" style="text-align:center;padding:24px;color:#1a3050;font-size:12px">Noch keine Positionen.</div>
   </div>
-  <div style="font-size:10px;color:#2a4060;margin-top:8px">Positionen werden gespeichert.</div>
+  <p style="font-size:10px;color:#2a4060;margin-top:8px">Positionen werden gespeichert.</p>
 </div>
 
-<!-- TAB 3: GUIDE -->
+<!-- TAB 3 GUIDE -->
 <div id="tab3" class="hidden">
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
     <div class="card" style="border-color:#1d4ed840">
@@ -188,24 +196,24 @@ tr:hover td{background:#0a1220}
     </div>
     <div class="card" style="border-color:#16a34a40">
       <div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:9px">BREAKOUT SETUP</div>
-      <div style="font-size:11px;color:#6a8aaa;line-height:1.9">1. Klaren Widerstand identifizieren<br>2. Tagesschluss uber Widerstand<br>3. Hohes Volumen bestaetigt<br>4. Entry Folgetag oder Retest<br>5. Target: Measured Move<br><span style="color:#f87171">6. Stop unter Ausbruchsniveau</span></div>
+      <div style="font-size:11px;color:#6a8aaa;line-height:1.9">1. Widerstand identifizieren<br>2. Tagesschluss darueber<br>3. Hohes Volumen bestaetigt<br>4. Entry Folgetag oder Retest<br>5. Target: Measured Move<br><span style="color:#f87171">6. Stop unter Ausbruchsniveau</span></div>
     </div>
     <div class="card" style="border-color:#ca8a0440">
       <div style="font-size:12px;font-weight:700;color:#fde047;margin-bottom:9px">REVERSAL SETUP</div>
-      <div style="font-size:11px;color:#6a8aaa;line-height:1.9">1. RSI unter 25-30<br>2. Kurs an wichtiger Stuetze<br>3. Verlust OHNE Fundamental-News<br>4. Umkehrkerze mit Volumen<br>5. Kleines Kapital - hohes Risiko!<br><span style="color:#f87171">6. R/R mindestens 3:1</span></div>
+      <div style="font-size:11px;color:#6a8aaa;line-height:1.9">1. RSI unter 25-30<br>2. Kurs an wichtiger Stuetze<br>3. Verlust OHNE Fundamental-News<br>4. Umkehrkerze mit Volumen<br>5. Kleines Kapital - hohes Risiko<br><span style="color:#f87171">6. R/R mindestens 3:1</span></div>
     </div>
     <div class="card" style="border-color:#dc262640">
       <div style="font-size:12px;font-weight:700;color:#f87171;margin-bottom:9px">RISIKOMANAGEMENT</div>
-      <div style="font-size:11px;color:#6a8aaa;line-height:1.9">Max. 1-2% Risiko pro Trade<br>R/R mindestens 2:1<br>Max. 3-5 offene Positionen<br>Stop Loss sofort setzen!<br>LS Exchange Kurs in TR pruefen</div>
+      <div style="font-size:11px;color:#6a8aaa;line-height:1.9">Max. 1-2% Risiko pro Trade<br>R/R mindestens 2:1<br>Max. 3-5 offene Positionen<br>Stop Loss sofort setzen<br>LS Exchange Kurs in TR pruefen</div>
     </div>
   </div>
 </div>
 
 </div>
 <script>
-var FMP = "TW9XCUkDJ4qQOgrfOnW1Iebkd8eyiz7G";
+"use strict";
 
-// ── KANDIDATEN ────────────────────────────────────────────────
+// ── DATA ──────────────────────────────────────────────────────
 var KD = {
   tech:[
     {t:"NVDA",n:"NVIDIA Corp",s:"Tech/KI (USD)",r:"BUY",e:110,tg:135,sl:100,rsi:"48",tf:"2-3 Wo",a:"Korrigiert auf MA50. Blackwell-Nachfrage stark.",c:"GTC Konferenz 2026"},
@@ -223,504 +231,512 @@ var KD = {
   ],
   small:[
     {t:"AIXA",n:"Aixtron SE",s:"Halbleiter",r:"BUY",e:14.50,tg:18.50,sl:13.00,rsi:"43",tf:"3-5 Wo",a:"SiC-Nachfrage stark.",c:"SiC-Erweiterung"},
-    {t:"SMHN",n:"Suss MicroTec",s:"Halbleiter",r:"STRONG BUY",e:53,tg:68,sl:47,rsi:"61",tf:"4-6 Wo",a:"Relative Starke hoch. Konsolidierung beendet.",c:"Auftragseingang Q1"},
+    {t:"SMHN",n:"Suss MicroTec",s:"Halbleiter",r:"STRONG BUY",e:53,tg:68,sl:47,rsi:"61",tf:"4-6 Wo",a:"Relative Starke hoch.",c:"Auftragseingang Q1"},
     {t:"SFQ",n:"SAF-Holland SE",s:"Automotive",r:"BUY",e:14.00,tg:17.50,sl:12.80,rsi:"37",tf:"3-4 Wo",a:"Untere Range-Grenze. KGV unter 8.",c:"US-Trucking Q1"},
-    {t:"LPKF",n:"LPKF Laser",s:"Industrietech",r:"WATCH",e:8.60,tg:11.00,sl:7.60,rsi:"31",tf:"4-6 Wo",a:"Historischer Support. 5G/E-Mobilitat.",c:"Neuer Grossauftrag"},
+    {t:"LPKF",n:"LPKF Laser",s:"Industrietech",r:"WATCH",e:8.60,tg:11.00,sl:7.60,rsi:"31",tf:"4-6 Wo",a:"Historischer Support.",c:"Neuer Grossauftrag"},
     {t:"SECB",n:"SecuNet Security",s:"Cybersecurity",r:"BUY",e:143,tg:175,sl:130,rsi:"46",tf:"3-5 Wo",a:"Profitiert von Staatsausgaben.",c:"Bundesregierung IT"}
   ],
   div:[
-    {t:"ALV",n:"Allianz SE",s:"Versicherung",r:"BUY",e:325,tg:365,sl:308,rsi:"50",tf:"3-5 Wo",a:"Dividende 4,8%. Pricing-Power stark.",c:"Q1 + Dividende Mai"},
-    {t:"MUV2",n:"Munich Re",s:"Ruckversicherung",r:"STRONG BUY",e:490,tg:555,sl:462,rsi:"58",tf:"4-6 Wo",a:"Ausbruch uber 480. Dividende 5%.",c:"Renewals Q2"},
+    {t:"ALV",n:"Allianz SE",s:"Versicherung",r:"BUY",e:325,tg:365,sl:308,rsi:"50",tf:"3-5 Wo",a:"Dividende 4.8%. Pricing-Power stark.",c:"Q1 + Dividende Mai"},
+    {t:"MUV2",n:"Munich Re",s:"Rueckversicherung",r:"STRONG BUY",e:490,tg:555,sl:462,rsi:"58",tf:"4-6 Wo",a:"Ausbruch uber 480. Dividende 5%.",c:"Renewals Q2"},
     {t:"ENR",n:"Siemens Energy",s:"Energie",r:"BUY",e:37,tg:47,sl:33,rsi:"45",tf:"4-6 Wo",a:"Energiewende-Profiteur.",c:"Grid Auftrage H1"},
     {t:"DWS",n:"DWS Group",s:"Asset Mgmt",r:"WATCH",e:31.50,tg:38,sl:29,rsi:"39",tf:"3-4 Wo",a:"Dividende 6%+.",c:"Dividendenbestatigung"},
     {t:"TLX",n:"Talanx AG",s:"Versicherung",r:"BUY",e:77,tg:92,sl:72,rsi:"55",tf:"4-8 Wo",a:"18 Monate Aufwartstrend.",c:"Hannover Ruck Q1"}
   ],
   roh:[
-    {t:"WPM",n:"Wheaton Metals (USD)",s:"Gold/Streaming",r:"BUY",e:133,tg:165,sl:120,rsi:"58",tf:"3-5 Wo",a:"NYSE USD-Kurs! Gold uber 3000 USD.",c:"Q4 Earnings"},
-    {t:"RIO",n:"Rio Tinto (USD)",s:"Bergbau/Kupfer",r:"BUY",e:47.50,tg:57,sl:43,rsi:"42",tf:"3-5 Wo",a:"Kupfernachfrage strukturell stark. Dividende 6%+.",c:"China Konjunktur"},
+    {t:"WPM",n:"Wheaton Metals (USD)",s:"Gold/Streaming",r:"BUY",e:133,tg:165,sl:120,rsi:"58",tf:"3-5 Wo",a:"Gold uber 3000 USD.",c:"Q4 Earnings"},
+    {t:"RIO",n:"Rio Tinto (USD)",s:"Bergbau/Kupfer",r:"BUY",e:47.50,tg:57,sl:43,rsi:"42",tf:"3-5 Wo",a:"Kupfernachfrage stark. Dividende 6%+.",c:"China Konjunktur"},
     {t:"SQM",n:"SQM Chile (USD)",s:"Lithium",r:"WATCH",e:29,tg:40,sl:24,rsi:"30",tf:"6-10 Wo",a:"Contrarian. Lithiumpreis schwach.",c:"Lithium-Erholung"},
-    {t:"BP",n:"BP PLC",s:"Ol und Gas",r:"WATCH",e:4.05,tg:4.80,sl:3.70,rsi:"36",tf:"3-4 Wo",a:"Dividende 6%. Geopolitik als Treiber.",c:"OPEC Entscheidung"},
+    {t:"BP",n:"BP PLC",s:"Oel und Gas",r:"WATCH",e:4.05,tg:4.80,sl:3.70,rsi:"36",tf:"3-4 Wo",a:"Dividende 6%.",c:"OPEC Entscheidung"},
     {t:"FRE",n:"Fresenius SE",s:"Gesundheit",r:"BUY",e:34.50,tg:42,sl:31,rsi:"48",tf:"4-6 Wo",a:"Turnaround. Kabi und Helios stark.",c:"Q1 2026"}
   ],
   krypto:[
     {t:"COIN",n:"Coinbase (USD)",s:"Krypto-Exchange",r:"BUY",e:183,tg:235,sl:162,rsi:"45",tf:"2-4 Wo",a:"BTC-Volumen treibt Gebuhren.",c:"BTC-Erholung"},
-    {t:"MARA",n:"Marathon Digital (USD)",s:"BTC Mining",r:"WATCH",e:13,tg:20,sl:10.50,rsi:"29",tf:"2-4 Wo",a:"Stark korrigiert. Risikoreich.",c:"BTC 80000"},
-    {t:"RIOT",n:"Riot Platforms (USD)",s:"BTC Mining",r:"WATCH",e:10,tg:15.50,sl:8.20,rsi:"31",tf:"2-3 Wo",a:"Uberverkauft. Kurzfristiger Rebound.",c:"BTC-Anstieg"},
-    {t:"MSTR",n:"Strategy Inc (USD)",s:"BTC Treasury",r:"WATCH",e:135,tg:175,sl:112,rsi:"38",tf:"3-5 Wo",a:"3x Hebel auf Bitcoin. Viele im Minus.",c:"BTC-Erholung"},
+    {t:"MARA",n:"Marathon Digital (USD)",s:"BTC Mining",r:"WATCH",e:13,tg:20,sl:10.50,rsi:"29",tf:"2-4 Wo",a:"Stark korrigiert.",c:"BTC 80000"},
+    {t:"RIOT",n:"Riot Platforms (USD)",s:"BTC Mining",r:"WATCH",e:10,tg:15.50,sl:8.20,rsi:"31",tf:"2-3 Wo",a:"Uberverkauft. Rebound moeglich.",c:"BTC-Anstieg"},
+    {t:"MSTR",n:"Strategy Inc (USD)",s:"BTC Treasury",r:"WATCH",e:135,tg:175,sl:112,rsi:"38",tf:"3-5 Wo",a:"3x Hebel auf Bitcoin.",c:"BTC-Erholung"},
     {t:"CLSK",n:"CleanSpark (USD)",s:"Mining/ESG",r:"BUY",e:8,tg:13.50,sl:6.80,rsi:"33",tf:"3-5 Wo",a:"100% erneuerbare Energien.",c:"BTC + ESG"}
   ]
 };
 
-
-
 // ── STATE ─────────────────────────────────────────────────────
-var curSec = "tech", curTF = "mittel", curMkt = "dax", curView = "los";
-var liveData = [], movers = [], portfolio = [];
+var curSec = "tech";
+var curTF  = "mittel";
+var movers = [];
+var portfolio = [];
 
-try { var sp = localStorage.getItem("ss2_p"); if(sp) portfolio = JSON.parse(sp); } catch(e){}
-try { var sm = localStorage.getItem("ss2_m"); if(sm) movers = JSON.parse(sm); } catch(e){}
-if (!portfolio.length) portfolio = [{ticker:"VALNEVA",name:"Valneva SE",entry:4.00,shares:1,current:4.86,stop:4.30,target:7.50,exchange:"Euronext",notes:"VALOR Phase-3"}];
+try { var _p = localStorage.getItem("ss3_p"); if (_p) portfolio = JSON.parse(_p); } catch(e) {}
+try { var _m = localStorage.getItem("ss3_m"); if (_m) movers   = JSON.parse(_m); } catch(e) {}
+if (!portfolio.length) {
+  portfolio = [{ticker:"VALNEVA",name:"Valneva SE",entry:4.00,shares:50,current:4.86,stop:4.30,target:7.50,exchange:"Euronext",notes:"VALOR Phase-3"}];
+}
 
-function saveP() { try{localStorage.setItem("ss2_p",JSON.stringify(portfolio));}catch(e){} }
-function saveM() { try{localStorage.setItem("ss2_m",JSON.stringify(movers));}catch(e){} }
+function savePort() { try { localStorage.setItem("ss3_p", JSON.stringify(portfolio)); } catch(e) {} }
+function saveMov()  { try { localStorage.setItem("ss3_m", JSON.stringify(movers));    } catch(e) {} }
 
 // ── TABS ──────────────────────────────────────────────────────
-function tab(n) {
-  for(var i=0;i<4;i++){
-    document.getElementById("tab"+i).className = i===n?"":"hidden";
-    document.getElementById("nav"+i).className = i===n?"nb on":"nb";
+function showTab(n) {
+  for (var i = 0; i < 4; i++) {
+    document.getElementById("tab" + i).className = (i === n) ? "" : "hidden";
+    document.getElementById("nav" + i).className = (i === n) ? "nb on" : "nb";
   }
-  if(n===2) renderPort();
-  if(n===1) renderMov();
+  if (n === 2) renderPort();
+  if (n === 1) renderMovers();
 }
 
 // ── SCANNER ───────────────────────────────────────────────────
-function sec(btn, s) {
+function setSec(btn, s) {
   curSec = s;
-  var r = document.getElementById("secRow").querySelectorAll(".pb");
-  for(var i=0;i<r.length;i++) r[i].className="pb";
-  btn.className="pb on";
-  document.getElementById("scanOut").innerHTML="";
+  var btns = document.querySelectorAll("#tab0 .card:first-child .pb");
+  for (var i = 0; i < btns.length; i++) btns[i].className = "pb";
+  btn.className = "pb on";
+  document.getElementById("scanOut").innerHTML = "";
 }
-function tf(btn, t) {
+function setTF(btn, t) {
   curTF = t;
-  var r = document.getElementById("tfRow").querySelectorAll(".pb");
-  for(var i=0;i<r.length;i++) r[i].className="pb";
-  btn.className="pb on";
-  document.getElementById("scanOut").innerHTML="";
+  var btns = document.querySelectorAll("#tab0 .card:nth-child(2) .pb");
+  for (var i = 0; i < btns.length; i++) btns[i].className = "pb";
+  btn.className = "pb on";
+  document.getElementById("scanOut").innerHTML = "";
 }
-function scan() {
+function runScan() {
   var btn = document.getElementById("scanBtn");
-  btn.disabled=true; btn.textContent="Scanne...";
-  document.getElementById("scanOut").innerHTML="";
-  setTimeout(function(){
-    btn.disabled=false; btn.textContent="Erneut scannen";
-    var list = KD[curSec]||[];
+  btn.disabled = true;
+  btn.textContent = "Scanne...";
+  document.getElementById("scanOut").innerHTML = "";
+  setTimeout(function() {
+    btn.disabled = false;
+    btn.textContent = "Erneut scannen";
+    var list = KD[curSec] || [];
     var out = document.getElementById("scanOut");
-    for(var i=0;i<list.length;i++) out.appendChild(makeCard(list[i],i));
-    var d=document.createElement("div");
-    d.style.cssText="margin-top:12px;font-size:10px;color:#1a3050;padding:8px;text-align:center";
-    d.textContent="Keine Anlageberatung. Stand Marz 2026.";
-    out.appendChild(d);
-  },900);
+    for (var i = 0; i < list.length; i++) {
+      out.appendChild(makeScanCard(list[i], i));
+    }
+  }, 800);
 }
-function makeCard(s,i) {
-  var rr = s.e>s.sl ? ((s.tg-s.e)/(s.e-s.sl)).toFixed(1) : null;
-  var up = (((s.tg-s.e)/s.e)*100).toFixed(1);
-  var bc = s.r==="STRONG BUY"?"badge bSB":s.r==="BUY"?"badge bB":"badge bW";
-  var el = document.createElement("div");
-  el.className="item";
-  el.style.animationDelay=(i*.06)+"s";
-  el.innerHTML=
-    "<div style='display:flex;justify-content:space-between;align-items:flex-start'>"+
-      "<div style='display:flex;align-items:center;gap:10px'>"+
-        "<div style='background:#0a1628;border:1px solid #1e3a5f;border-radius:7px;padding:5px 10px;min-width:56px;text-align:center'>"+
-          "<div style='font-family:monospace;font-size:13px;font-weight:700;color:#60a5fa'>"+s.t+"</div>"+
-        "</div>"+
-        "<div>"+
-          "<div style='font-size:12px;font-weight:600;color:#c8d8f0'>"+s.n+"</div>"+
-          "<div style='font-size:10px;color:#3a5070'>"+s.s+"</div>"+
-        "</div>"+
-      "</div>"+
-      "<span class='"+bc+"'>"+s.r+"</span>"+
-    "</div>"+
-    "<div class='g3'>"+
-      "<div class='box'><div class='blbl'>EINSTIEG</div><div class='bval' style='color:#60a5fa'>"+s.e+"</div></div>"+
-      "<div class='box'><div class='blbl'>ZIEL</div><div class='bval' style='color:#4ade80'>"+s.tg+"</div></div>"+
-      "<div class='box'><div class='blbl'>STOP</div><div class='bval' style='color:#f87171'>"+s.sl+"</div></div>"+
-    "</div>"+
-    "<div style='display:flex;gap:12px;font-size:11px;color:#3a5070;margin-top:8px;flex-wrap:wrap'>"+
-      (rr?"<span>R/R: <strong style='color:"+(Number(rr)>=2?"#4ade80":"#fde047")+"'>"+rr+":1</strong></span>":"")+
-      "<span>Upside: <strong style='color:#4ade80'>+"+up+"%</strong></span>"+
-      "<span>"+s.tf+"</span>"+
-    "</div>"+
-    "<div class='warn'>LS Exchange: Kurs vor Order in Trade Republic pruefen!</div>"+
-    "<div class='det' id='det_s_"+i+"'>"+
-      "<div class='dbox'>RSI: "+s.rsi+" | "+s.a+"</div>"+
-      "<div class='cat'>Katalysator: "+s.c+"</div>"+
-      "<button class='abtn' style='font-size:10px' onclick='qadd(event,\""+s.t+"\",\""+s.n+"\","+s.e+","+s.sl+","+s.tg+")'>+ Portfolio</button>"+
-      "<div style='font-size:10px;color:#1a3050;margin-top:6px'>Keine Anlageberatung.</div>"+
+
+function badgeCls(r) {
+  if (r === "STRONG BUY") return "badge bSB";
+  if (r === "BUY")        return "badge bB";
+  return "badge bW";
+}
+
+function makeScanCard(s, i) {
+  var rr   = (s.e > s.sl) ? ((s.tg - s.e) / (s.e - s.sl)).toFixed(1) : "?";
+  var up   = (((s.tg - s.e) / s.e) * 100).toFixed(1);
+  var rrC  = parseFloat(rr) >= 2 ? "#4ade80" : "#fde047";
+  var el   = document.createElement("div");
+  el.className = "item";
+  el.innerHTML =
+    "<div style='display:flex;justify-content:space-between;align-items:flex-start'>" +
+      "<div style='display:flex;align-items:center;gap:10px'>" +
+        "<div style='background:#0a1628;border:1px solid #1e3a5f;border-radius:7px;padding:5px 10px;min-width:56px;text-align:center'>" +
+          "<div style='font-family:monospace;font-size:13px;font-weight:700;color:#60a5fa'>" + s.t + "</div>" +
+        "</div>" +
+        "<div>" +
+          "<div style='font-size:12px;font-weight:600;color:#c8d8f0'>" + s.n + "</div>" +
+          "<div style='font-size:10px;color:#3a5070'>" + s.s + "</div>" +
+        "</div>" +
+      "</div>" +
+      "<span class='" + badgeCls(s.r) + "'>" + s.r + "</span>" +
+    "</div>" +
+    "<div class='g3'>" +
+      "<div class='box'><div class='blbl'>EINSTIEG</div><div class='bval' style='color:#60a5fa'>" + s.e + "</div></div>" +
+      "<div class='box'><div class='blbl'>STOP LOSS</div><div class='bval' style='color:#f87171'>" + s.sl + "</div></div>" +
+      "<div class='box'><div class='blbl'>ZIEL</div><div class='bval' style='color:#4ade80'>" + s.tg + "</div></div>" +
+    "</div>" +
+    "<div style='display:flex;gap:12px;font-size:11px;color:#3a5070;margin-top:8px;flex-wrap:wrap'>" +
+      "<span>R/R: <strong style='color:" + rrC + "'>" + rr + ":1</strong></span>" +
+      "<span>Upside: <strong style='color:#4ade80'>+" + up + "%</strong></span>" +
+      "<span>" + s.tf + "</span>" +
+    "</div>" +
+    "<div class='warn'>LS Exchange: Kurs vor Order in Trade Republic pruefen!</div>" +
+    "<div class='det' id='sc" + i + "'>" +
+      "<div class='dbox'>RSI: " + s.rsi + " | " + s.a + "</div>" +
+      "<div class='cat'>Katalysator: " + s.c + "</div>" +
+      "<button class='abtn' style='font-size:10px' onclick='qAdd(event,\"" + s.t + "\",\"" + s.n + "\"," + s.e + "," + s.sl + "," + s.tg + ")'>+ Portfolio</button>" +
+      "<div style='font-size:10px;color:#1a3050;margin-top:6px'>Keine Anlageberatung.</div>" +
     "</div>";
-  el.addEventListener("click",function(ev){
-    if(ev.target.tagName==="BUTTON") return;
-    var d=document.getElementById("det_s_"+i);
-    d.style.display=d.style.display==="block"?"none":"block";
+  el.addEventListener("click", function(ev) {
+    if (ev.target.tagName === "BUTTON") return;
+    var d = document.getElementById("sc" + i);
+    d.style.display = d.style.display === "block" ? "none" : "block";
   });
   return el;
 }
 
-// ── LIVE MOVERS ───────────────────────────────────────────────
+// ── TOP MOVERS SEARCH ─────────────────────────────────────────
+function doSearch() {
+  var raw = document.getElementById("mv_search").value.trim().toUpperCase();
+  if (!raw) { alert("Bitte Ticker eingeben."); return; }
+  var btn = document.getElementById("searchBtn");
+  btn.textContent = "Suche...";
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+  document.getElementById("searchLoad").className = "";
+  document.getElementById("searchErr").className = "hidden";
+  document.getElementById("searchResult").className = "hidden";
 
+  var usdEur = 0.92;
+  var url1 = "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(raw) + "?interval=1d&range=1y";
+  var url2 = "https://query2.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(raw) + "?interval=1d&range=1y";
+  var proxies = [
+    "https://api.allorigins.win/get?url=" + encodeURIComponent(url1),
+    "https://corsproxy.io/?" + encodeURIComponent(url1),
+    "https://api.allorigins.win/get?url=" + encodeURIComponent(url2),
+    "https://corsproxy.io/?" + encodeURIComponent(url2)
+  ];
 
+  function resetBtn() {
+    btn.textContent = "Suchen";
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    document.getElementById("searchLoad").className = "hidden";
+  }
 
+  function parseMeta(txt) {
+    var data;
+    try { data = JSON.parse(txt); } catch(e) { return null; }
+    if (data && data.contents) {
+      try { data = JSON.parse(data.contents); } catch(e) { return null; }
+    }
+    var res = data && data.chart && data.chart.result;
+    if (!res || !res.length) return null;
+    var meta = res[0].meta;
+    if (!meta || !meta.regularMarketPrice) return null;
+    return meta;
+  }
 
-function getBadge(s){
-  // Badge logic based on change%, distance from 52W low, R/R
-  var ch = s.c || 0;
-  var dLo = s.dLo ? parseFloat(s.dLo) : 999;
-  var rr = (s.entry&&s.stop&&s.target&&s.entry>s.stop) ? (s.target-s.entry)/(s.entry-s.stop) : 0;
-  if(ch < -8 && dLo < 20 && rr >= 2) return {txt:"STRONG BUY", cls:"badge bSB"};
-  if(ch < -5 && dLo < 30 && rr >= 1.5) return {txt:"BUY", cls:"badge bB"};
-  if(ch < -2) return {txt:"WATCH", cls:"badge bW"};
-  return {txt:"BEOBACHTEN", cls:"badge bW"};
+  function fillForm(meta) {
+    var isUSD = (meta.currency === "USD");
+    var px  = isUSD ? meta.regularMarketPrice * usdEur : meta.regularMarketPrice;
+    var lo  = isUSD ? (meta.fiftyTwoWeekLow  || 0) * usdEur : (meta.fiftyTwoWeekLow  || 0);
+    var hi  = isUSD ? (meta.fiftyTwoWeekHigh || 0) * usdEur : (meta.fiftyTwoWeekHigh || 0);
+    var prv = isUSD ? (meta.chartPreviousClose || meta.previousClose || 0) * usdEur
+                   : (meta.chartPreviousClose || meta.previousClose || 0);
+    var chg = (prv > 0) ? ((px - prv) / prv * 100) : 0;
+    var sym = (meta.symbol || raw).replace(".DE","").replace(".F","").replace(".HM","");
+    document.getElementById("mv_t").value  = sym;
+    document.getElementById("mv_n").value  = meta.shortName || meta.longName || sym;
+    document.getElementById("mv_p").value  = px.toFixed(2);
+    document.getElementById("mv_c").value  = chg.toFixed(2);
+    document.getElementById("mv_lo").value = lo > 0 ? lo.toFixed(2) : "";
+    document.getElementById("mv_hi").value = hi > 0 ? hi.toFixed(2) : "";
+    document.getElementById("searchResult").className = "";
+    document.getElementById("mv_search").value = "";
+    resetBtn();
+    recalc();
+  }
+
+  function tryNext(i) {
+    if (i >= proxies.length) {
+      resetBtn();
+      var err = document.getElementById("searchErr");
+      err.innerHTML = "Nicht gefunden.<br><small>Deutsche Aktien mit .DE (z.B. <b>DBK.DE</b>). US-Aktien ohne Endung (z.B. <b>AAPL</b>).</small>";
+      err.className = "errbox";
+      return;
+    }
+    fetch(proxies[i])
+      .then(function(r) { return r.text(); })
+      .then(function(txt) {
+        var meta = parseMeta(txt);
+        if (meta) { fillForm(meta); } else { tryNext(i + 1); }
+      })
+      .catch(function() { tryNext(i + 1); });
+  }
+  tryNext(0);
 }
 
-function renderMov(){
-  var c2=document.getElementById("movOut");
-  if(!movers.length){c2.innerHTML="";return;}
-  c2.innerHTML="";
-  for(var i=0;i<movers.length;i++){
-    (function(s,idx){
-      var pos=s.c===null||s.c>=0;
-      var cc=s.c!==null?(s.c>=0?"#4ade80":"#f87171"):"#a0b8d0";
-      var bg=s.c!==null?(s.c>=0?"#052e16":"#1c0a0a"):"#0a1628";
-      var br=s.c!==null?(s.c>=0?"#16a34a":"#dc2626"):"#1e3a5f";
-      var chgStr=s.c!==null?(s.c>=0?"+":"")+s.c.toFixed(2)+"%":"";
+function recalc() {
+  var px = parseFloat(document.getElementById("mv_p").value);
+  var lo = parseFloat(document.getElementById("mv_lo").value);
+  var hi = parseFloat(document.getElementById("mv_hi").value);
+  if (isNaN(px) || px <= 0) return;
+  var stop = (!isNaN(lo) && lo > 0) ? lo * 0.98 : px * 0.93;
+  var tg   = (!isNaN(hi) && hi > 0) ? hi * 0.70 : px * 1.15;
+  document.getElementById("mv_entry").value = px.toFixed(2);
+  document.getElementById("mv_stop").value  = stop.toFixed(2);
+  document.getElementById("mv_tg").value    = tg.toFixed(2);
+  recalcRR();
+}
 
-      // Signal text
-      var sig="";
-      if(s.c!==null&&s.c<-8) sig="Massiver Ausverkauf - Umkehrkerze abwarten!";
-      else if(s.c!==null&&s.c<-5) sig="Starker Rueckgang - Unterstuetzung + Bestaetigung abwarten";
-      else if(s.c!==null&&s.c<-2) sig="Moderater Rueckgang - Setup prufen";
+function recalcRR() {
+  var e  = parseFloat(document.getElementById("mv_entry").value);
+  var sl = parseFloat(document.getElementById("mv_stop").value);
+  var tg = parseFloat(document.getElementById("mv_tg").value);
+  var el = document.getElementById("rrLine");
+  if (isNaN(e) || isNaN(sl) || isNaN(tg) || sl >= e) { el.innerHTML = ""; return; }
+  var risk = e - sl, reward = tg - e;
+  var rr   = (reward / risk).toFixed(1);
+  var up   = ((tg - e) / e * 100).toFixed(1);
+  var dn   = ((e - sl) / e * 100).toFixed(1);
+  var col  = parseFloat(rr) >= 2 ? "#4ade80" : parseFloat(rr) >= 1.5 ? "#fde047" : "#f87171";
+  el.innerHTML =
+    "Risiko: <strong style='color:#f87171'>-" + dn + "%</strong> &nbsp;|&nbsp; " +
+    "Upside: <strong style='color:#4ade80'>+" + up + "%</strong> &nbsp;|&nbsp; " +
+    "R/R: <strong style='color:" + col + "'>" + rr + ":1</strong>";
+}
 
-      // Badge
-      var bdg = getBadge(s);
+function calcBadge(chg, dLo, rr) {
+  if (chg < -8 && dLo < 20 && rr >= 2) return {t:"STRONG BUY", c:"badge bSB"};
+  if (chg < -5 && dLo < 35 && rr >= 1.5) return {t:"BUY", c:"badge bB"};
+  if (chg < -2) return {t:"WATCH", c:"badge bW"};
+  return {t:"BEOBACHTEN", c:"badge bW"};
+}
 
-      // R/R
+function addMover() {
+  var ticker = document.getElementById("mv_t").value.trim().toUpperCase();
+  var name   = document.getElementById("mv_n").value.trim() || ticker;
+  var px     = parseFloat(document.getElementById("mv_p").value);
+  var chg    = parseFloat(document.getElementById("mv_c").value);
+  var lo     = parseFloat(document.getElementById("mv_lo").value);
+  var hi     = parseFloat(document.getElementById("mv_hi").value);
+  var entry  = parseFloat(document.getElementById("mv_entry").value);
+  var stop   = parseFloat(document.getElementById("mv_stop").value);
+  var tg     = parseFloat(document.getElementById("mv_tg").value);
+  if (!ticker || isNaN(px)) { alert("Ticker und Kurs benoetigt."); return; }
+  var dLo = (!isNaN(lo) && lo > 0) ? (((px - lo) / lo) * 100).toFixed(1) : null;
+  var dHi = (!isNaN(hi) && hi > 0) ? (((px - hi) / hi) * 100).toFixed(1) : null;
+  movers.unshift({
+    ticker: ticker, name: name, px: px,
+    chg: isNaN(chg) ? null : chg,
+    lo: isNaN(lo) ? null : lo, hi: isNaN(hi) ? null : hi,
+    dLo: dLo, dHi: dHi,
+    entry: isNaN(entry) ? null : entry,
+    stop:  isNaN(stop)  ? null : stop,
+    tg:    isNaN(tg)    ? null : tg
+  });
+  saveMov();
+  document.getElementById("searchResult").className = "hidden";
+  document.getElementById("mv_search").value = "";
+  renderMovers();
+}
+
+function clearMovers() {
+  if (!confirm("Alle Eintrage loeschen?")) return;
+  movers = []; saveMov(); renderMovers();
+}
+
+function delMover(i) {
+  movers.splice(i, 1); saveMov(); renderMovers();
+}
+
+function renderMovers() {
+  var out = document.getElementById("moverList");
+  if (!movers.length) { out.innerHTML = ""; return; }
+  out.innerHTML = "";
+  for (var i = 0; i < movers.length; i++) {
+    (function(s, idx) {
+      var chgStr = s.chg !== null ? (s.chg >= 0 ? "+" : "") + s.chg.toFixed(2) + "%" : "";
+      var chgCol = s.chg !== null ? (s.chg >= 0 ? "#4ade80" : "#f87171") : "#a0b8d0";
+      var chgBg  = s.chg !== null ? (s.chg >= 0 ? "#052e16" : "#1c0a0a") : "#0a1628";
+      var chgBr  = s.chg !== null ? (s.chg >= 0 ? "#16a34a" : "#dc2626") : "#1e3a5f";
+
+      var sig = "";
+      if (s.chg !== null && s.chg < -8)       sig = "Massiver Ausverkauf - Umkehrkerze abwarten!";
+      else if (s.chg !== null && s.chg < -5)  sig = "Starker Rueckgang - Unterstuetzung abwarten";
+      else if (s.chg !== null && s.chg < -2)  sig = "Moderater Rueckgang - Setup prufen";
+
+      var rr = (s.entry && s.stop && s.tg && s.entry > s.stop)
+        ? (s.tg - s.entry) / (s.entry - s.stop) : 0;
+      var dLo = s.dLo ? parseFloat(s.dLo) : 999;
+      var bdg = calcBadge(s.chg || 0, dLo, rr);
+
       var rrHtml = "";
-      if(s.entry&&s.stop&&s.target&&s.entry>s.stop){
-        var risk=s.entry-s.stop, rew=s.target-s.entry;
-        var rr=(rew/risk).toFixed(1);
-        var rrCol=parseFloat(rr)>=2?"#4ade80":parseFloat(rr)>=1.5?"#fde047":"#f87171";
-        var up=(((s.target-s.entry)/s.entry)*100).toFixed(1);
-        var dn=(((s.entry-s.stop)/s.entry)*100).toFixed(1);
-        rrHtml="<div class='dbox' style='margin-top:8px'>"+
-          "R/R: <strong style='color:"+rrCol+"'>"+rr+":1</strong> &nbsp;|&nbsp; "+
-          "Upside: <strong style='color:#4ade80'>+"+up+"%</strong> &nbsp;|&nbsp; "+
-          "Risiko: <strong style='color:#f87171'>-"+dn+"%</strong>"+
+      if (s.entry && s.stop && s.tg && s.entry > s.stop) {
+        var rrVal = rr.toFixed(1);
+        var up    = ((s.tg - s.entry) / s.entry * 100).toFixed(1);
+        var dn    = ((s.entry - s.stop) / s.entry * 100).toFixed(1);
+        var rrCol = parseFloat(rrVal) >= 2 ? "#4ade80" : parseFloat(rrVal) >= 1.5 ? "#fde047" : "#f87171";
+        rrHtml = "<div class='dbox' style='margin-top:8px'>" +
+          "R/R: <strong style='color:" + rrCol + "'>" + rrVal + ":1</strong>" +
+          " &nbsp;|&nbsp; Upside: <strong style='color:#4ade80'>+" + up + "%</strong>" +
+          " &nbsp;|&nbsp; Risiko: <strong style='color:#f87171'>-" + dn + "%</strong>" +
           "</div>";
       }
 
-      // News links
-      var ticker = s.t;
-      var gNews = "https://news.google.com/search?q="+encodeURIComponent(s.n+" Aktie")+"&hl=de";
-      var tvNews = "https://www.tradingview.com/symbols/"+ticker+"/news/";
-      var tvChart = "https://www.tradingview.com/chart/?symbol="+ticker;
+      var gNews  = "https://news.google.com/search?q=" + encodeURIComponent(s.name + " Aktie") + "&hl=de";
+      var tvNews = "https://www.tradingview.com/symbols/" + s.ticker + "/news/";
+      var tvCht  = "https://www.tradingview.com/chart/?symbol=" + s.ticker;
+      var yhoo   = "https://finance.yahoo.com/quote/" + s.ticker;
 
-      var el=document.createElement("div");
-      el.className="item";
-      el.innerHTML=
-        // Header row
-        "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px'>"+
-          "<div style='display:flex;align-items:center;gap:8px;flex:1;min-width:0'>"+
-            "<div style='background:#0a1628;border:1px solid #1e3a5f;border-radius:7px;padding:4px 9px;min-width:50px;text-align:center;flex-shrink:0'>"+
-              "<div style='font-family:monospace;font-size:13px;font-weight:700;color:#60a5fa'>"+s.t+"</div>"+
-            "</div>"+
-            "<div style='font-size:12px;font-weight:600;color:#c8d8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+s.n+"</div>"+
-          "</div>"+
-          "<div style='display:flex;align-items:center;gap:7px;flex-shrink:0'>"+
-            "<div style='font-size:14px;font-weight:700;color:#c8d8f0'>"+s.p.toFixed(2)+"</div>"+
-            (chgStr?"<span style='background:"+bg+";border:1px solid "+br+";color:"+cc+";border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700'>"+chgStr+"</span>":"")+
-          "</div>"+
-        "</div>"+
-        // Badge + signal
-        "<div style='display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap'>"+
-          "<span class='"+bdg.cls+"'>"+bdg.txt+"</span>"+
-          (sig?"<span style='font-size:11px;color:#8aaac8'>"+sig+"</span>":"")+
-        "</div>"+
-        // Entry/Stop/Target boxes (like scanner)
-        (s.entry&&s.stop&&s.target?
-          "<div class='g3'>"+
-            "<div class='box'><div class='blbl'>EINSTIEG</div><div class='bval' style='color:#60a5fa'>"+s.entry.toFixed(2)+"</div></div>"+
-            "<div class='box'><div class='blbl'>STOP LOSS</div><div class='bval' style='color:#f87171'>"+s.stop.toFixed(2)+"</div></div>"+
-            "<div class='box'><div class='blbl'>ZIEL</div><div class='bval' style='color:#4ade80'>"+s.target.toFixed(2)+"</div></div>"+
-          "</div>":"<div style='margin-top:6px;font-size:10px;color:#3a5070'>Suche erneut um Setup zu generieren</div>")+
-        // R/R
-        rrHtml+
-        // Expandable detail
-        "<div class='det' id='det_m_"+idx+"'>"+
-          // 52W data
-          (s.lo&&s.hi?
-            "<div class='g3' style='margin-top:0;margin-bottom:8px'>"+
-              "<div class='box'><div class='blbl'>52W TIEF</div><div class='bval' style='color:#f87171'>"+s.lo.toFixed(2)+"</div></div>"+
-              "<div class='box'><div class='blbl'>ABSTAND TIEF</div><div class='bval' style='color:#c8d8f0'>"+(s.dLo||"?")+"%</div></div>"+
-              "<div class='box'><div class='blbl'>52W HOCH</div><div class='bval' style='color:#4ade80'>"+s.hi.toFixed(2)+"</div></div>"+
-            "</div>":"")+
-          // Stop info
-          (s.ssl?"<div class='dbox'>Nat. Stop (2% unter 52W-Tief): <strong>"+s.ssl+" EUR</strong></div>":"")+
-          // 52W high distance
-          (s.dHi?"<div class='dbox'>"+Math.abs(parseFloat(s.dHi)).toFixed(1)+"% unter 52W-Hoch</div>":"")+
-          // News links - most important for "why did it fall"
-          "<div style='background:#0a0a1e;border:1px solid #1e2a5f;border-radius:7px;padding:10px 12px;margin-top:8px'>"+
-            "<div class='lbl' style='margin-bottom:6px'>WARUM FIEL DIE AKTIE? - NACHRICHTEN</div>"+
-            "<div style='display:flex;gap:6px;flex-wrap:wrap'>"+
-              "<a href='"+gNews+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>Google News</a>"+
-              "<a href='"+tvNews+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>TradingView News</a>"+
-              "<a href='"+tvChart+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>Chart</a>"+
-              "<a href='https://finance.yahoo.com/quote/"+ticker+"' target='_blank' style='background:#0a1628;border:1px solid #2a3a58;color:#60a5fa;border-radius:6px;padding:4px 10px;font-size:11px;text-decoration:none'>Yahoo Finance</a>"+
-            "</div>"+
-          "</div>"+
-          // Buttons
-          "<div style='display:flex;gap:6px;margin-top:10px;flex-wrap:wrap'>"+
-            "<button class='abtn' style='font-size:10px;padding:3px 9px' onclick='qadd(event,""+s.t+"",""+s.n+"","+(s.entry||s.p)+","+(s.stop||0)+","+(s.target||0)+")'>+ Portfolio</button>"+
-            "<button class='dbtn' onclick='event.stopPropagation();delMov("+idx+")'>Entfernen</button>"+
-          "</div>"+
-          "<div class='warn' style='margin-top:8px'>Keine Anlageberatung. Vor Order in Trade Republic pruefen!</div>"+
+      var el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML =
+        "<div style='display:flex;justify-content:space-between;align-items:center;gap:8px'>" +
+          "<div style='display:flex;align-items:center;gap:8px;flex:1;min-width:0'>" +
+            "<div style='background:#0a1628;border:1px solid #1e3a5f;border-radius:7px;padding:4px 9px;min-width:50px;text-align:center;flex-shrink:0'>" +
+              "<div style='font-family:monospace;font-size:13px;font-weight:700;color:#60a5fa'>" + s.ticker + "</div>" +
+            "</div>" +
+            "<div style='font-size:12px;font-weight:600;color:#c8d8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>" + s.name + "</div>" +
+          "</div>" +
+          "<div style='display:flex;align-items:center;gap:7px;flex-shrink:0'>" +
+            "<div style='font-size:14px;font-weight:700;color:#c8d8f0'>" + s.px.toFixed(2) + "</div>" +
+            (chgStr ? "<span style='background:" + chgBg + ";border:1px solid " + chgBr + ";color:" + chgCol + ";border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700'>" + chgStr + "</span>" : "") +
+          "</div>" +
+        "</div>" +
+        "<div style='display:flex;align-items:center;gap:8px;margin-top:8px'>" +
+          "<span class='" + bdg.c + "'>" + bdg.t + "</span>" +
+          (sig ? "<span style='font-size:11px;color:#8aaac8'>" + sig + "</span>" : "") +
+        "</div>" +
+        (s.entry && s.stop && s.tg ?
+          "<div class='g3'>" +
+            "<div class='box'><div class='blbl'>EINSTIEG</div><div class='bval' style='color:#60a5fa'>" + s.entry.toFixed(2) + "</div></div>" +
+            "<div class='box'><div class='blbl'>STOP LOSS</div><div class='bval' style='color:#f87171'>" + s.stop.toFixed(2) + "</div></div>" +
+            "<div class='box'><div class='blbl'>ZIEL</div><div class='bval' style='color:#4ade80'>" + s.tg.toFixed(2) + "</div></div>" +
+          "</div>" : "") +
+        rrHtml +
+        "<div class='det' id='mv" + idx + "'>" +
+          (s.lo && s.hi ?
+            "<div class='g3' style='margin-top:0;margin-bottom:8px'>" +
+              "<div class='box'><div class='blbl'>52W TIEF</div><div class='bval' style='color:#f87171'>" + s.lo.toFixed(2) + "</div></div>" +
+              "<div class='box'><div class='blbl'>ABSTAND TIEF</div><div class='bval' style='color:#c8d8f0'>" + (s.dLo || "?") + "%</div></div>" +
+              "<div class='box'><div class='blbl'>52W HOCH</div><div class='bval' style='color:#4ade80'>" + s.hi.toFixed(2) + "</div></div>" +
+            "</div>" : "") +
+          (s.dHi ? "<div class='dbox'>" + Math.abs(parseFloat(s.dHi)).toFixed(1) + "% unter 52W-Hoch</div>" : "") +
+          "<div class='newsbox'>" +
+            "<div class='lbl' style='margin-bottom:6px'>WARUM FIEL DIE AKTIE?</div>" +
+            "<div style='display:flex;gap:6px;flex-wrap:wrap'>" +
+              "<a href='" + gNews  + "' target='_blank' class='lnk'>Google News</a>" +
+              "<a href='" + tvNews + "' target='_blank' class='lnk'>TradingView News</a>" +
+              "<a href='" + tvCht  + "' target='_blank' class='lnk'>Chart</a>" +
+              "<a href='" + yhoo   + "' target='_blank' class='lnk'>Yahoo Finance</a>" +
+            "</div>" +
+          "</div>" +
+          "<div style='display:flex;gap:6px;margin-top:10px;flex-wrap:wrap'>" +
+            "<button class='abtn' style='font-size:10px;padding:3px 9px' onclick='qAdd(event,\"" + s.ticker + "\",\"" + s.name + "\"," + (s.entry || s.px) + "," + (s.stop || 0) + "," + (s.tg || 0) + ")'>+ Portfolio</button>" +
+            "<button class='dbtn' onclick='event.stopPropagation();delMover(" + idx + ")'>Entfernen</button>" +
+          "</div>" +
+          "<div class='warn'>Keine Anlageberatung. Vor Order in Trade Republic pruefen!</div>" +
         "</div>";
 
-      el.addEventListener("click",function(ev){
-        if(ev.target.tagName==="BUTTON"||ev.target.tagName==="A") return;
-        var d=document.getElementById("det_m_"+idx);
-        d.style.display=d.style.display==="block"?"none":"block";
+      el.addEventListener("click", function(ev) {
+        if (ev.target.tagName === "BUTTON" || ev.target.tagName === "A") return;
+        var d = document.getElementById("mv" + idx);
+        d.style.display = d.style.display === "block" ? "none" : "block";
       });
-      c2.appendChild(el);
-    })(movers[i],i);
+      out.appendChild(el);
+    })(movers[i], i);
   }
 }
 
+// ── PORTFOLIO ─────────────────────────────────────────────────
+function qAdd(ev, ticker, name, entry, stop, tg) {
+  ev.stopPropagation();
+  document.getElementById("p_t").value  = ticker;
+  document.getElementById("p_n").value  = name;
+  document.getElementById("p_e").value  = entry;
+  document.getElementById("p_sl").value = stop || "";
+  document.getElementById("p_tg").value = tg   ? parseFloat(tg).toFixed(2) : "";
+  showTab(2);
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
 
-function addPos(){
-  var t=document.getElementById("p_t").value.trim().toUpperCase();
-  var n=document.getElementById("p_n").value.trim();
-  var e=parseFloat(document.getElementById("p_e").value);
-  var s=parseFloat(document.getElementById("p_s").value);
-  var c=parseFloat(document.getElementById("p_c").value);
-  var sl=parseFloat(document.getElementById("p_sl").value);
-  var tg=parseFloat(document.getElementById("p_tg").value);
-  var ex=document.getElementById("p_ex").value;
-  var no=document.getElementById("p_no").value.trim();
-  if(!t||isNaN(e)||isNaN(s)){alert("Ticker, Einstieg und Anzahl benoetigt.");return;}
-  portfolio.push({ticker:t,name:n,entry:e,shares:s,current:isNaN(c)?e:c,stop:isNaN(sl)?0:sl,target:isNaN(tg)?0:tg,exchange:ex,notes:no});
-  saveP();
-  ["p_t","p_n","p_e","p_s","p_c","p_sl","p_tg","p_no"].forEach(function(id){document.getElementById(id).value="";});
+function addPos() {
+  var t  = document.getElementById("p_t").value.trim().toUpperCase();
+  var n  = document.getElementById("p_n").value.trim();
+  var e  = parseFloat(document.getElementById("p_e").value);
+  var s  = parseFloat(document.getElementById("p_s").value);
+  var c  = parseFloat(document.getElementById("p_c").value);
+  var sl = parseFloat(document.getElementById("p_sl").value);
+  var tg = parseFloat(document.getElementById("p_tg").value);
+  var ex = document.getElementById("p_ex").value;
+  var no = document.getElementById("p_no").value.trim();
+  if (!t || isNaN(e) || isNaN(s)) { alert("Ticker, Einstieg und Anzahl benoetigt."); return; }
+  portfolio.push({ticker:t, name:n, entry:e, shares:s, current:isNaN(c)?e:c, stop:isNaN(sl)?0:sl, target:isNaN(tg)?0:tg, exchange:ex, notes:no});
+  savePort();
+  ["p_t","p_n","p_e","p_s","p_c","p_sl","p_tg","p_no"].forEach(function(id) { document.getElementById(id).value = ""; });
   renderPort();
 }
 
-function qadd(ev,t,n,e,sl,tg){
-  ev.stopPropagation();
-  document.getElementById("p_t").value=t;
-  document.getElementById("p_n").value=n;
-  document.getElementById("p_e").value=e;
-  document.getElementById("p_sl").value=sl||"";
-  document.getElementById("p_tg").value=tg?parseFloat(tg).toFixed(2):"";
-  tab(2);
-  window.scrollTo({top:0,behavior:"smooth"});
+function delPos(i) {
+  if (!confirm("Entfernen?")) return;
+  portfolio.splice(i, 1); savePort(); renderPort();
 }
 
-function delPos(i){if(!confirm("Entfernen?"))return;portfolio.splice(i,1);saveP();renderPort();}
-
-function updCur(i,v){
-  var n=parseFloat(v);
-  if(!isNaN(n)&&n>0){portfolio[i].current=n;saveP();renderPortSum();}
-}
-function updShares(i,v){
-  var n=parseFloat(v);
-  if(!isNaN(n)&&n>0){portfolio[i].shares=n;saveP();renderPortSum();}
+function updCur(i, v) {
+  var n = parseFloat(v);
+  if (!isNaN(n) && n > 0) { portfolio[i].current = n; savePort(); renderPortSum(); }
 }
 
-function renderPortSum(){
-  var ti=0,tv=0;
-  for(var i=0;i<portfolio.length;i++){ti+=portfolio[i].entry*portfolio[i].shares;tv+=portfolio[i].current*portfolio[i].shares;}
-  var pnl=tv-ti, pct=ti>0?((tv-ti)/ti*100).toFixed(2):0, pc=pnl>=0?"#4ade80":"#f87171";
-  document.getElementById("portSum").innerHTML=
-    "<div class='sbox'><div class='lbl'>POSITIONEN</div><div style='font-size:18px;font-weight:700;color:#60a5fa'>"+portfolio.length+"</div></div>"+
-    "<div class='sbox'><div class='lbl'>INVESTIERT</div><div style='font-size:16px;font-weight:700;color:#c8d8f0'>"+ti.toFixed(0)+"</div></div>"+
-    "<div class='sbox'><div class='lbl'>WERT</div><div style='font-size:16px;font-weight:700;color:#c8d8f0'>"+tv.toFixed(0)+"</div></div>"+
-    "<div class='sbox'><div class='lbl'>P&L EUR</div><div style='font-size:16px;font-weight:700;color:"+pc+"'>"+(pnl>=0?"+":"")+pnl.toFixed(0)+"</div></div>"+
-    "<div class='sbox'><div class='lbl'>P&L %</div><div style='font-size:16px;font-weight:700;color:"+pc+"'>"+(pnl>=0?"+":"")+pct+"%</div></div>";
+function updShares(i, v) {
+  var n = parseFloat(v);
+  if (!isNaN(n) && n > 0) { portfolio[i].shares = n; savePort(); renderPortSum(); }
 }
 
-function renderPort(){
-  var tb=document.getElementById("portTbl"), em=document.getElementById("portEmpty");
-  tb.innerHTML="";
-  if(!portfolio.length){em.style.display="block";document.getElementById("portSum").innerHTML="";return;}
-  em.style.display="none";
-  for(var i=0;i<portfolio.length;i++){
-    var p=portfolio[i];
-    var inv=p.entry*p.shares, val=p.current*p.shares, pnl=val-inv;
-    var pct=((p.current-p.entry)/p.entry*100).toFixed(2);
-    var pc=pnl>=0?"profit":"loss";
-    var tr=document.createElement("tr");
-    tr.innerHTML=
-      "<td><strong style='color:#c8d8f0'>"+p.ticker+"</strong><br><span style='font-size:9px;color:#3a5070'>"+p.name+"</span></td>"+
-      "<td>"+p.entry.toFixed(2)+"</td>"+
-      "<td><input type='number' step='0.01' value='"+p.current.toFixed(2)+"' onchange='updCur("+i+",this.value)' style='width:65px;padding:2px 5px;font-size:11px;text-align:right'></td>"+
-      "<td><input type='number' min='1' value='"+p.shares+"' onchange='updShares("+i+",this.value)' style='width:55px;padding:2px 5px;font-size:11px;text-align:right'></td>"+
-      "<td>"+inv.toFixed(0)+"</td>"+
-      "<td class='"+pc+"'>"+(pnl>=0?"+":"")+pnl.toFixed(2)+"</td>"+
-      "<td class='"+pc+"'>"+(pnl>=0?"+":"")+pct+"%</td>"+
-      "<td style='color:#f87171'>"+(p.stop?p.stop.toFixed(2):"-")+"</td>"+
-      "<td style='color:#4ade80'>"+(p.target?p.target.toFixed(2):"-")+"</td>"+
-      "<td style='font-size:9px;color:#3a5070'>"+p.exchange+"</td>"+
-      "<td><button class='dbtn' onclick='delPos("+i+")'>X</button></td>";
-    tb.appendChild(tr);
+function renderPortSum() {
+  var ti = 0, tv = 0;
+  for (var i = 0; i < portfolio.length; i++) {
+    ti += portfolio[i].entry   * portfolio[i].shares;
+    tv += portfolio[i].current * portfolio[i].shares;
+  }
+  var pnl = tv - ti;
+  var pct = ti > 0 ? ((tv - ti) / ti * 100).toFixed(2) : "0.00";
+  var col = pnl >= 0 ? "#4ade80" : "#f87171";
+  document.getElementById("portSum").innerHTML =
+    "<div class='sbox'><div class='lbl'>POSITIONEN</div><div style='font-size:18px;font-weight:700;color:#60a5fa'>" + portfolio.length + "</div></div>" +
+    "<div class='sbox'><div class='lbl'>INVESTIERT</div><div style='font-size:16px;font-weight:700;color:#c8d8f0'>" + ti.toFixed(0) + "</div></div>" +
+    "<div class='sbox'><div class='lbl'>WERT</div><div style='font-size:16px;font-weight:700;color:#c8d8f0'>" + tv.toFixed(0) + "</div></div>" +
+    "<div class='sbox'><div class='lbl'>P&L EUR</div><div style='font-size:16px;font-weight:700;color:" + col + "'>" + (pnl >= 0 ? "+" : "") + pnl.toFixed(0) + "</div></div>" +
+    "<div class='sbox'><div class='lbl'>P&L %</div><div style='font-size:16px;font-weight:700;color:" + col + "'>" + (pnl >= 0 ? "+" : "") + pct + "%</div></div>";
+}
+
+function renderPort() {
+  var tbody = document.getElementById("portTbl");
+  var empty = document.getElementById("portEmpty");
+  tbody.innerHTML = "";
+  if (!portfolio.length) { empty.style.display = "block"; document.getElementById("portSum").innerHTML = ""; return; }
+  empty.style.display = "none";
+  for (var i = 0; i < portfolio.length; i++) {
+    var p   = portfolio[i];
+    var inv = p.entry * p.shares;
+    var val = p.current * p.shares;
+    var pnl = val - inv;
+    var pct = ((p.current - p.entry) / p.entry * 100).toFixed(2);
+    var pc  = pnl >= 0 ? "profit" : "loss";
+    var tr  = document.createElement("tr");
+    tr.innerHTML =
+      "<td><strong style='color:#c8d8f0'>" + p.ticker + "</strong><br><span style='font-size:9px;color:#3a5070'>" + p.name + "</span></td>" +
+      "<td>" + p.entry.toFixed(2) + "</td>" +
+      "<td><input type='number' step='0.01' value='" + p.current.toFixed(2) + "' onchange='updCur(" + i + ",this.value)' style='width:65px;padding:2px 5px;font-size:11px;text-align:right'></td>" +
+      "<td><input type='number' min='1' value='" + p.shares + "' onchange='updShares(" + i + ",this.value)' style='width:55px;padding:2px 5px;font-size:11px;text-align:right'></td>" +
+      "<td>" + inv.toFixed(0) + "</td>" +
+      "<td class='" + pc + "'>" + (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "</td>" +
+      "<td class='" + pc + "'>" + (pnl >= 0 ? "+" : "") + pct + "%</td>" +
+      "<td style='color:#f87171'>" + (p.stop   ? p.stop.toFixed(2)   : "-") + "</td>" +
+      "<td style='color:#4ade80'>" + (p.target ? p.target.toFixed(2) : "-") + "</td>" +
+      "<td style='font-size:9px;color:#3a5070'>" + p.exchange + "</td>" +
+      "<td><button class='dbtn' onclick='delPos(" + i + ")'>X</button></td>";
+    tbody.appendChild(tr);
   }
   renderPortSum();
 }
 
-function refreshPx(){
-  if(!portfolio.length) return;
-  var btn=document.getElementById("rfBtn");
-  btn.textContent="Ladt..."; btn.disabled=true;
-  var syms=portfolio.map(function(p){
-    return p.ticker;
-  });
-  var url="https://financialmodelingprep.com/api/v3/quote/"+syms.join(",")+"?apikey="+FMP;
-  fetch(url)
-    .then(function(r){return r.json();})
-    .then(function(data){
-      for(var i=0;i<data.length;i++){
-        var q=data[i], sym=q.symbol.replace(".XETRA","").replace(".HM","").replace(".F","");
-        for(var j=0;j<portfolio.length;j++){
-          if(portfolio[j].ticker===sym){
-            portfolio[j].current=q.price*((q.currency==="USD")?0.92:1);
+function refreshPx() {
+  if (!portfolio.length) return;
+  var btn = document.getElementById("rfBtn");
+  btn.textContent = "Ladt..."; btn.disabled = true;
+  var syms = portfolio.map(function(p) { return p.ticker; }).join(",");
+  var url  = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=" + encodeURIComponent(syms) + "&fields=symbol,regularMarketPrice,currency";
+  var prx  = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+  fetch(prx)
+    .then(function(r) { return r.json(); })
+    .then(function(raw) {
+      var data = raw.contents ? JSON.parse(raw.contents) : raw;
+      var quotes = (data && data.quoteResponse && data.quoteResponse.result) || [];
+      for (var i = 0; i < quotes.length; i++) {
+        var q   = quotes[i];
+        var sym = q.symbol.replace(".DE","").replace(".F","");
+        for (var j = 0; j < portfolio.length; j++) {
+          if (portfolio[j].ticker === sym) {
+            portfolio[j].current = (q.currency === "USD") ? q.regularMarketPrice * 0.92 : q.regularMarketPrice;
           }
         }
       }
-      saveP(); renderPort();
-      btn.textContent="Kurse aktualisieren"; btn.disabled=false;
+      savePort(); renderPort();
     })
-    .catch(function(e){
-      alert("Fehler: "+e.message);
-      btn.textContent="Kurse aktualisieren"; btn.disabled=false;
-    });
-}
-function addMov(){
-  var t  = document.getElementById("mv_t").value.trim().toUpperCase();
-  var n  = document.getElementById("mv_n").value.trim() || t;
-  var p  = parseFloat(document.getElementById("mv_p").value);
-  var ch = parseFloat(document.getElementById("mv_c").value);
-  var lo = parseFloat(document.getElementById("mv_lo").value);
-  var hi = parseFloat(document.getElementById("mv_hi").value);
-  var en = parseFloat(document.getElementById("mv_entry").value);
-  var sl = parseFloat(document.getElementById("mv_stop").value);
-  var tg = parseFloat(document.getElementById("mv_tg").value);
-  if(!t || isNaN(p)){ alert("Ticker und Kurs benoetigt."); return; }
-  var dLo = (!isNaN(lo)&&lo>0) ? (((p-lo)/lo)*100).toFixed(1) : null;
-  var dHi = (!isNaN(hi)&&hi>0) ? (((p-hi)/hi)*100).toFixed(1) : null;
-  var ssl = (!isNaN(lo)&&lo>0) ? (lo*0.98).toFixed(2) : null;
-  movers.unshift({t:t,n:n,p:p,c:isNaN(ch)?null:ch,lo:isNaN(lo)?null:lo,hi:isNaN(hi)?null:hi,dLo:dLo,dHi:dHi,ssl:ssl,
-    entry:isNaN(en)?null:en, stop:isNaN(sl)?null:sl, target:isNaN(tg)?null:tg});
-  saveM();
-  document.getElementById("mv_result").className = "hidden";
-  document.getElementById("mv_setup").className = "hidden";
-  renderMov();
-}
-
-function clearMov(){
-  if(!confirm("Alle Eintrage loeschen?")) return;
-  movers = []; saveM(); renderMov();
-}
-
-function delMov(i){
-  movers.splice(i,1); saveM(); renderMov();
-}
-
-function calcSetup(){
-  var p  = parseFloat(document.getElementById("mv_p").value);
-  var lo = parseFloat(document.getElementById("mv_lo").value);
-  var hi = parseFloat(document.getElementById("mv_hi").value);
-  if(isNaN(p) || p<=0) return;
-  var stop  = (!isNaN(lo)&&lo>0) ? (lo*0.98) : (p*0.93);
-  var tg    = (!isNaN(hi)&&hi>0) ? (hi*0.70) : (p*1.15);
-  document.getElementById("mv_entry").value = p.toFixed(2);
-  document.getElementById("mv_stop").value  = stop.toFixed(2);
-  document.getElementById("mv_tg").value    = tg.toFixed(2);
-  document.getElementById("mv_setup").className = "";
-  calcRR();
-}
-
-function calcRR(){
-  var e  = parseFloat(document.getElementById("mv_entry").value);
-  var sl = parseFloat(document.getElementById("mv_stop").value);
-  var tg = parseFloat(document.getElementById("mv_tg").value);
-  var rr = document.getElementById("mv_rr");
-  if(isNaN(e)||isNaN(sl)||isNaN(tg)||sl>=e){ rr.innerHTML=""; return; }
-  var risk   = e - sl;
-  var reward = tg - e;
-  var ratio  = (reward/risk).toFixed(1);
-  var upside = ((tg-e)/e*100).toFixed(1);
-  var downside = ((e-sl)/e*100).toFixed(1);
-  var col = parseFloat(ratio)>=2 ? "#4ade80" : parseFloat(ratio)>=1.5 ? "#fde047" : "#f87171";
-  rr.innerHTML =
-    "Risiko: <strong style='color:#f87171'>-"+downside+"%</strong> &nbsp;|&nbsp; "+
-    "Upside: <strong style='color:#4ade80'>+"+upside+"%</strong> &nbsp;|&nbsp; "+
-    "R/R: <strong style='color:"+col+"'>"+ratio+":1</strong>"+
-    (parseFloat(ratio)<2?"&nbsp; <span style='color:#ca8a04;font-size:10px'>Ziel anpassen fuer besseres R/R</span>":"");
-}
-
-function searchTicker(){
-  var raw = document.getElementById("mv_search").value.trim().toUpperCase();
-  if(!raw){ alert("Bitte Ticker eingeben."); return; }
-  var btn = document.getElementById("mv_searchBtn");
-  btn.innerHTML = "&#9696; Suche...";
-  btn.disabled = true;
-  btn.style.opacity = "0.7";
-  document.getElementById("mv_result").className = "hidden";
-  document.getElementById("mv_err").className = "hidden";
-
-  var usdEur = 0.92;
-  // Try both query1 and query2 Yahoo endpoints, plus both proxies = 4 attempts
-  var yUrl1 = "https://query1.finance.yahoo.com/v8/finance/chart/" + raw + "?interval=1d&range=1y";
-  var yUrl2 = "https://query2.finance.yahoo.com/v8/finance/chart/" + raw + "?interval=1d&range=1y";
-  var p1 = "https://api.allorigins.win/get?url=" + encodeURIComponent(yUrl1);
-  var p2 = "https://corsproxy.io/?" + encodeURIComponent(yUrl1);
-  var p3 = "https://api.allorigins.win/get?url=" + encodeURIComponent(yUrl2);
-  var p4 = "https://corsproxy.io/?" + encodeURIComponent(yUrl2);
-
-  function done(meta){
-    var isUSD = meta.currency === "USD";
-    var px = isUSD ? meta.regularMarketPrice * usdEur : meta.regularMarketPrice;
-    var lo = isUSD ? (meta.fiftyTwoWeekLow||0)*usdEur : (meta.fiftyTwoWeekLow||0);
-    var hi = isUSD ? (meta.fiftyTwoWeekHigh||0)*usdEur : (meta.fiftyTwoWeekHigh||0);
-    var prev = meta.chartPreviousClose || meta.previousClose || 0;
-    if(isUSD) prev = prev * usdEur;
-    var chg = prev > 0 ? ((px - prev) / prev * 100) : 0;
-    var sym = (meta.symbol||raw).replace(".DE","").replace(".F","").replace(".HM","");
-    document.getElementById("mv_t").value = sym;
-    document.getElementById("mv_n").value = meta.shortName || meta.longName || sym;
-    document.getElementById("mv_p").value = px.toFixed(2);
-    document.getElementById("mv_c").value = chg.toFixed(2);
-    document.getElementById("mv_lo").value = lo > 0 ? lo.toFixed(2) : "";
-    document.getElementById("mv_hi").value = hi > 0 ? hi.toFixed(2) : "";
-    document.getElementById("mv_result").className = "";
-    document.getElementById("mv_search").value = "";
-    btn.innerHTML = "Suchen";
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    calcSetup();
-  }
-
-  function fail(){
-    var err = document.getElementById("mv_err");
-    err.innerHTML = "Nicht gefunden. Tipps:<br>Deutsche Aktien: <b>DBK.DE</b>, <b>BAYN.DE</b>, <b>SAP.DE</b><br>US-Aktien: <b>NVDA</b>, <b>AAPL</b>, <b>COIN</b>";
-    err.className = "";
-    btn.innerHTML = "Suchen";
-    btn.disabled = false;
-    btn.style.opacity = "1";
-  }
-
-  function parse(txt){
-    var data;
-    try{ data = JSON.parse(txt); }catch(e){ return null; }
-    if(data && data.contents){ try{ data = JSON.parse(data.contents); }catch(e){ return null; } }
-    var meta = data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta;
-    if(!meta || !meta.regularMarketPrice) return null;
-    return meta;
-  }
-
-  var proxies = [p1, p2, p3, p4];
-  function tryNext(i){
-    if(i >= proxies.length){ fail(); return; }
-    fetch(proxies[i])
-      .then(function(r){ return r.text(); })
-      .then(function(txt){
-        var meta = parse(txt);
-        if(meta){ done(meta); } else { tryNext(i+1); }
-      })
-      .catch(function(){ tryNext(i+1); });
-  }
-  tryNext(0);
+    .catch(function(e) { alert("Fehler: " + e.message); })
+    .finally(function() { btn.textContent = "Kurse aktualisieren"; btn.disabled = false; });
 }
 </script>
 </body>
