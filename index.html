@@ -136,7 +136,7 @@ tr:hover td{background:#0a1220}
     <a href="https://de.tradingview.com/markets/stocks-usa/market-movers-losers/" target="_blank" class="lnk">US Verlierer</a>
     <a href="https://finance.yahoo.com/markets/stocks/losers/" target="_blank" class="lnk">Yahoo</a>
     <a href="https://de.tradingview.com/screener/" target="_blank" class="lnk">Screener</a>
-    <a href="https://www.onvista.de/aktien/kurslisten/dax" target="_blank" class="lnk">Onvista DAX</a>
+    <a href="https://www.onvista.de/index/DAX-Index-325484" target="_blank" class="lnk">Onvista DAX</a>
   </div>
 
   <div id="moverList"></div>
@@ -380,11 +380,19 @@ function doSearch() {
   var usdEur = 0.92;
   var url1 = "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(raw) + "?interval=1d&range=1y";
   var url2 = "https://query2.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(raw) + "?interval=1d&range=1y";
+  // For German tickers, also try .F suffix (Frankfurt) as fallback
+  var rawF = raw.endsWith(".DE") ? raw.replace(".DE",".F") : (raw.indexOf(".")<0 ? raw+".DE" : raw);
+  var url3 = "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(rawF) + "?interval=1d&range=1y";
+  var url4 = "https://query2.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(rawF) + "?interval=1d&range=1y";
   var proxies = [
     "https://api.allorigins.win/get?url=" + encodeURIComponent(url1),
     "https://corsproxy.io/?" + encodeURIComponent(url1),
     "https://api.allorigins.win/get?url=" + encodeURIComponent(url2),
-    "https://corsproxy.io/?" + encodeURIComponent(url2)
+    "https://corsproxy.io/?" + encodeURIComponent(url2),
+    "https://api.allorigins.win/get?url=" + encodeURIComponent(url3),
+    "https://corsproxy.io/?" + encodeURIComponent(url3),
+    "https://api.allorigins.win/get?url=" + encodeURIComponent(url4),
+    "https://corsproxy.io/?" + encodeURIComponent(url4)
   ];
 
   function resetBtn() {
