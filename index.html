@@ -100,7 +100,7 @@ tr:hover td{background:#0a1220}
   <div class="card">
     <div class="lbl">TICKER SUCHEN</div>
     <div style="background:#070e1a;border-radius:8px;padding:10px 12px;font-size:11px;color:#6a8aaa;margin-bottom:12px;line-height:1.8">
-      Trade Republic aufmachen, Top Movers antippen, Ticker kopieren (z.B. <strong style="color:#60a5fa">DBK.DE</strong> oder <strong style="color:#60a5fa">AAPL</strong>) und hier einfuegen.
+      Ticker eingeben (z.B. <strong style="color:#60a5fa">DBK.DE</strong>, <strong style="color:#60a5fa">AAPL</strong>) oder <strong style="color:#fde047">Firmenname/WKN</strong> (z.B. <strong style="color:#60a5fa">Bayer</strong>, <strong style="color:#60a5fa">641</strong>).
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <input id="mv_search" placeholder="z.B. DBK.DE oder AAPL" onkeydown="if(event.key==='Enter')doSearch()" style="flex:1">
@@ -212,6 +212,7 @@ tr:hover td{background:#0a1220}
 </div>
 <script>
 "use strict";
+var FMP = "TW9XCUkDJ4qQOgrfOnW1Iebkd8eyiz7G";
 
 // ── DATA ──────────────────────────────────────────────────────
 var KD = {
@@ -367,8 +368,8 @@ function makeScanCard(s, i) {
 
 // ── TOP MOVERS SEARCH ─────────────────────────────────────────
 function doSearch() {
-  var raw = document.getElementById("mv_search").value.trim().toUpperCase();
-  if (!raw) { alert("Bitte Ticker eingeben."); return; }
+  var raw = document.getElementById("mv_search").value.trim();
+  if (!raw) { alert("Bitte Ticker oder Name eingeben."); return; }
   var btn = document.getElementById("searchBtn");
   btn.textContent = "Suche...";
   btn.disabled = true;
@@ -377,11 +378,76 @@ function doSearch() {
   document.getElementById("searchErr").className = "hidden";
   document.getElementById("searchResult").className = "hidden";
 
+  // If input looks like a name/WKN (not a standard ticker), use FMP name search first
+  var looksLikeTicker = /^[A-Za-z]{1,5}(\.[A-Za-z]{1,2})?$/.test(raw.trim());
+  if (!looksLikeTicker) {
+    doFMPSearch(raw);
+  } else {
+    doYahooSearch(raw.toUpperCase());
+  }
+}
+
+function doFMPSearch(query) {
+  var btn = document.getElementById("searchBtn");
+  var fmpUrl = "https://financialmodelingprep.com/stable/search-name?query=" + encodeURIComponent(query) + "&apikey=" + FMP;
+  var proxy  = "https://api.allorigins.win/get?url=" + encodeURIComponent(fmpUrl);
+
+  function resetBtn() {
+    btn.textContent = "Suchen"; btn.disabled = false; btn.style.opacity = "1";
+    document.getElementById("searchLoad").className = "hidden";
+  }
+
+  fetch(proxy)
+    .then(function(r) { return r.text(); })
+    .then(function(txt) {
+      var data;
+      try { data = JSON.parse(txt); } catch(e) { data = null; }
+      if (data && data.contents) { try { data = JSON.parse(data.contents); } catch(e) { data = null; } }
+      // FMP returns array of matches
+      var results = Array.isArray(data) ? data : (data && data.data ? data.data : null);
+      if (!results || !results.length) {
+        // fallback: try yahoo with raw as ticker
+        doYahooSearch(query.toUpperCase());
+        return;
+      }
+      // Show picker if multiple results, or auto-pick first
+      if (results.length === 1) {
+        doYahooSearch(results[0].symbol);
+        return;
+      }
+      // Show top 5 results for user to pick
+      resetBtn();
+      document.getElementById("searchLoad").className = "hidden";
+      var html = "<div class='lbl' style='margin-bottom:8px'>MEHRERE TREFFER - AUSWAEHLEN:</div>";
+      for (var i = 0; i < Math.min(results.length, 6); i++) {
+        var r = results[i];
+        html += "<button onclick=\"pickTicker('" + r.symbol + "')\""  +
+          " style='display:block;width:100%;text-align:left;background:#070e1a;border:1px solid #1e3a5f;border-radius:7px;padding:8px 12px;color:#c8d8f0;font-size:11px;margin-bottom:4px;cursor:pointer'>" +
+          "<strong style='color:#60a5fa'>" + r.symbol + "</strong> &nbsp; " + (r.name || "") + " &nbsp; <span style='color:#3a5070'>" + (r.exchangeShortName || r.exchange || "") + "</span></button>";
+      }
+      document.getElementById("searchErr").innerHTML = html;
+      document.getElementById("searchErr").className = "errbox";
+      document.getElementById("searchErr").style.background = "#050c18";
+      document.getElementById("searchErr").style.borderColor = "#1e3a5f";
+      document.getElementById("searchErr").style.color = "#c8d8f0";
+    })
+    .catch(function() { doYahooSearch(query.toUpperCase()); });
+}
+
+function pickTicker(sym) {
+  document.getElementById("searchErr").className = "hidden";
+  document.getElementById("mv_search").value = sym;
+  var btn = document.getElementById("searchBtn");
+  btn.textContent = "Suche..."; btn.disabled = true; btn.style.opacity = "0.6";
+  document.getElementById("searchLoad").className = "";
+  doYahooSearch(sym);
+}
+
+function doYahooSearch(raw) {
   var usdEur = 0.92;
   var url1 = "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(raw) + "?interval=1d&range=1y";
   var url2 = "https://query2.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(raw) + "?interval=1d&range=1y";
-  // For German tickers, also try .F suffix (Frankfurt) as fallback
-  var rawF = raw.endsWith(".DE") ? raw.replace(".DE",".F") : (raw.indexOf(".")<0 ? raw+".DE" : raw);
+  var rawF = raw.endsWith(".DE") ? raw.replace(".DE",".F") : (raw.indexOf(".")<0 && raw.length<=6 ? raw+".DE" : raw);
   var url3 = "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(rawF) + "?interval=1d&range=1y";
   var url4 = "https://query2.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(rawF) + "?interval=1d&range=1y";
   var proxies = [
@@ -395,19 +461,16 @@ function doSearch() {
     "https://corsproxy.io/?" + encodeURIComponent(url4)
   ];
 
+  var btn = document.getElementById("searchBtn");
   function resetBtn() {
-    btn.textContent = "Suchen";
-    btn.disabled = false;
-    btn.style.opacity = "1";
+    btn.textContent = "Suchen"; btn.disabled = false; btn.style.opacity = "1";
     document.getElementById("searchLoad").className = "hidden";
   }
 
   function parseMeta(txt) {
     var data;
     try { data = JSON.parse(txt); } catch(e) { return null; }
-    if (data && data.contents) {
-      try { data = JSON.parse(data.contents); } catch(e) { return null; }
-    }
+    if (data && data.contents) { try { data = JSON.parse(data.contents); } catch(e) { return null; } }
     var res = data && data.chart && data.chart.result;
     if (!res || !res.length) return null;
     var meta = res[0].meta;
@@ -440,8 +503,9 @@ function doSearch() {
     if (i >= proxies.length) {
       resetBtn();
       var err = document.getElementById("searchErr");
-      err.innerHTML = "Nicht gefunden.<br><small>Deutsche Aktien mit .DE (z.B. <b>DBK.DE</b>). US-Aktien ohne Endung (z.B. <b>AAPL</b>).</small>";
+      err.innerHTML = "Nicht gefunden.<br><small>Versuche den vollstaendigen Firmennamen einzugeben (z.B. <b>Deutsche Bank</b>) oder den Ticker mit Boersen-Kuerzel (z.B. <b>DBK.DE</b>).</small>";
       err.className = "errbox";
+      err.style.background = ""; err.style.borderColor = ""; err.style.color = "";
       return;
     }
     fetch(proxies[i])
